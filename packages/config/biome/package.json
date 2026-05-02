@@ -7,5 +7,10 @@
 		"base.jsonc",
 		"react-library.jsonc",
 		"tanstack-start.jsonc"
-	]
+	],
+	"exports": {
+		"./base": "./base.jsonc",
+		"./react-library": "./react-library.jsonc",
+		"./tanstack-start": "./tanstack-start.jsonc"
+	}
 }

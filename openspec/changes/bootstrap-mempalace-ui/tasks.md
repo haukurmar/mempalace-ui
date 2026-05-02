@@ -8,13 +8,13 @@
 
 ## 2. Design tokens package
 
-- [ ] 2.1 Scaffold `packages/design-tokens/` with `package.json`, tsconfig extending `@memui/typescript-config/base.json`, and a `src/` entry point
-- [ ] 2.2 Author color tokens (semantic + palette) as a TypeScript module with neutral-warm base + single accent (final color decision in `04-design-system-spec` follow-up)
-- [ ] 2.3 Author spacing, typography, radii, shadow, and motion token modules
-- [ ] 2.4 Build a `generate-css.ts` script that emits CSS custom properties from the TS modules into `dist/tokens.css`
-- [ ] 2.5 Wire the same source into a Tailwind preset exported from `packages/design-tokens/tailwind.preset.ts`
-- [ ] 2.6 Add a vitest unit test that asserts every token in TS has a matching CSS variable in the generated file
-- [ ] 2.7 Add density-mode token variants keyed by `[data-density="compact"]` and `[data-density="dense"]`
+- [x] 2.1 Scaffold `packages/design-tokens/` with `package.json`, tsconfig extending `@memui/typescript-config/base.json`, and a `src/` entry point
+- [x] 2.2 Author color tokens (semantic + palette) as a TypeScript module with neutral-warm base + single accent (final color decision in `04-design-system-spec` follow-up)
+- [x] 2.3 Author spacing, typography, radii, shadow, and motion token modules
+- [x] 2.4 Build a `generate-css.ts` script that emits CSS custom properties from the TS modules into `dist/tokens.css`
+- [x] 2.5 Wire the same source into a Tailwind preset exported from `packages/design-tokens/tailwind.preset.ts`
+- [x] 2.6 Add a vitest unit test that asserts every token in TS has a matching CSS variable in the generated file
+- [x] 2.7 Add density-mode token variants keyed by `[data-density="compact"]` and `[data-density="dense"]`
 
 ## 3. UI package skeleton + Storybook app
 

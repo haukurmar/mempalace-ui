@@ -1,0 +1,66 @@
+{
+	"name": "@memui/design-tokens",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Framework-neutral design tokens for mempalace-ui",
+	"type": "module",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"default": "./src/index.ts"
+		},
+		"./grid": {
+			"types": "./src/grid.ts",
+			"default": "./src/grid.ts"
+		},
+		"./colors": {
+			"types": "./src/colors/index.ts",
+			"default": "./src/colors/index.ts"
+		},
+		"./palette": {
+			"types": "./src/palette.ts",
+			"default": "./src/palette.ts"
+		},
+		"./spacing": {
+			"types": "./src/spacing.ts",
+			"default": "./src/spacing.ts"
+		},
+		"./radius": {
+			"types": "./src/radius.ts",
+			"default": "./src/radius.ts"
+		},
+		"./typography": {
+			"types": "./src/typography.ts",
+			"default": "./src/typography.ts"
+		},
+		"./breakpoints": {
+			"types": "./src/breakpoints.ts",
+			"default": "./src/breakpoints.ts"
+		},
+		"./zIndices": {
+			"types": "./src/zIndices.ts",
+			"default": "./src/zIndices.ts"
+		},
+		"./tailwind": {
+			"types": "./src/adapters/tailwind.ts",
+			"default": "./src/adapters/tailwind.ts"
+		},
+		"./tailwind.preset.css": "./dist/tailwind.preset.css"
+	},
+	"files": ["src", "dist"],
+	"scripts": {
+		"build": "tsx scripts/generate-tailwind.ts",
+		"check-types": "tsc --noEmit",
+		"lint": "biome lint .",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@memui/biome-config": "workspace:*",
+		"@memui/typescript-config": "workspace:*",
+		"@types/node": "25.6.0",
+		"tsx": "4.21.0"
+	}
+}

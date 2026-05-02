@@ -1,2 +1,6 @@
 #IDEs
 .idea
+
+# All skills are in .agents/skills and symlinked to .claude/skills and .codex/skills via the link:agents npm script
+.claude/skills
+.codex/skills

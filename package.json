@@ -1,0 +1,13 @@
+{
+  "name": "mempalace-ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "link:agents": "node tools/link-agents/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.33.0"
+}

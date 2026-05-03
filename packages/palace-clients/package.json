@@ -42,6 +42,6 @@
 		"@memui/biome-config": "workspace:*",
 		"@memui/typescript-config": "workspace:*",
 		"@types/better-sqlite3": "catalog:",
-		"@types/node": "25.6.0"
+		"@types/node": "catalog:"
 	}
 }

@@ -25,8 +25,11 @@
 		"@tanstack/react-router-ssr-query": "1.166.12",
 		"@tanstack/react-start": "catalog:",
 		"@tanstack/react-virtual": "catalog:",
+		"lucide-react": "catalog:",
 		"react": "catalog:",
-		"react-dom": "catalog:"
+		"react-dom": "catalog:",
+		"react-markdown": "catalog:",
+		"remark-gfm": "catalog:"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",

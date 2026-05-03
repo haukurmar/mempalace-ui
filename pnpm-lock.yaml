@@ -179,12 +179,21 @@ importers:
       '@tanstack/react-virtual':
         specifier: 'catalog:'
         version: 3.13.24(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.14.0(react@19.2.5)
       react:
         specifier: 'catalog:'
         version: 19.2.5
       react-dom:
         specifier: 'catalog:'
         version: 19.2.5(react@19.2.5)
+      react-markdown:
+        specifier: 'catalog:'
+        version: 10.1.0(@types/react@19.2.5)(react@19.2.5)
+      remark-gfm:
+        specifier: 'catalog:'
+        version: 4.0.1
     devDependencies:
       '@biomejs/biome':
         specifier: 'catalog:'

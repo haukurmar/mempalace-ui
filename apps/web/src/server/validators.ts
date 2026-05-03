@@ -1,5 +1,6 @@
 import type {
 	FindTunnelsInput,
+	GetDrawerEmbeddingSummaryInput,
 	GetDrawerInput,
 	ListDrawerSummariesByRoomInput,
 	ListDrawerSummariesByWingInput,
@@ -101,6 +102,11 @@ export const validateListDrawerSummariesByWing = (raw: unknown): ListDrawerSumma
 
 export const validateGetDrawer = (raw: unknown): GetDrawerInput => {
 	if (!isObject(raw)) throw new TypeError("getDrawer input must be an object");
+	return { id: reqString(raw.id, "id") };
+};
+
+export const validateGetDrawerEmbeddingSummary = (raw: unknown): GetDrawerEmbeddingSummaryInput => {
+	if (!isObject(raw)) throw new TypeError("getDrawerEmbeddingSummary input must be an object");
 	return { id: reqString(raw.id, "id") };
 };
 

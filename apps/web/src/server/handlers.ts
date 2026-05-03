@@ -1,4 +1,8 @@
-import { type Connection, IncompatiblePalaceError } from "@memui/palace-clients";
+import {
+	type Connection,
+	type EmbeddingSummaryResult,
+	IncompatiblePalaceError,
+} from "@memui/palace-clients";
 import type { Drawer, DrawerSummary } from "@memui/palace-types/drawer";
 import type { Room } from "@memui/palace-types/room";
 import type { SearchResponse } from "@memui/palace-types/search";
@@ -143,6 +147,16 @@ export const getDrawerHandler = async (
 ): Promise<Drawer | null> => {
 	assertSqliteReady(conn);
 	return conn.sqlite.getDrawer(input.id);
+};
+
+export type GetDrawerEmbeddingSummaryInput = { id: string };
+
+export const getDrawerEmbeddingSummaryHandler = async (
+	conn: Connection,
+	input: GetDrawerEmbeddingSummaryInput,
+): Promise<EmbeddingSummaryResult> => {
+	assertSqliteReady(conn);
+	return conn.sqlite.getDrawerEmbeddingSummary(input.id);
 };
 
 export type SearchSemanticInput = {

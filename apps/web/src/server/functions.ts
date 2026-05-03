@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getConnection } from "./connection";
 import {
 	findTunnelsHandler,
+	getDrawerEmbeddingSummaryHandler,
 	getDrawerHandler,
 	getRoomTreeHandler,
 	getStatusHandler,
@@ -17,6 +18,7 @@ import { getLastChangeAt } from "./watch";
 import {
 	validateFindTunnels,
 	validateGetDrawer,
+	validateGetDrawerEmbeddingSummary,
 	validateListDrawerSummariesByRoom,
 	validateListDrawerSummariesByWing,
 	validateListDrawersByRoom,
@@ -72,6 +74,13 @@ export const getDrawer = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => {
 		const conn = await getConnection();
 		return getDrawerHandler(conn, data);
+	});
+
+export const getDrawerEmbeddingSummary = createServerFn({ method: "GET" })
+	.inputValidator(validateGetDrawerEmbeddingSummary)
+	.handler(async ({ data }) => {
+		const conn = await getConnection();
+		return getDrawerEmbeddingSummaryHandler(conn, data);
 	});
 
 export const searchSemantic = createServerFn({ method: "POST" })

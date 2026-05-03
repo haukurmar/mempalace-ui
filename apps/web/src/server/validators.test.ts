@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	validateFindTunnels,
 	validateGetDrawer,
+	validateGetDrawerEmbeddingSummary,
 	validateListDrawersByRoom,
 	validateListRooms,
 	validateSearchSemantic,
@@ -46,6 +47,17 @@ describe("validateListDrawersByRoom", () => {
 describe("validateGetDrawer", () => {
 	it("requires non-empty id", () => {
 		expect(() => validateGetDrawer({ id: "" })).toThrow();
+	});
+});
+
+describe("validateGetDrawerEmbeddingSummary", () => {
+	it("requires non-empty id", () => {
+		expect(() => validateGetDrawerEmbeddingSummary({ id: "" })).toThrow();
+		expect(() => validateGetDrawerEmbeddingSummary({})).toThrow();
+		expect(() => validateGetDrawerEmbeddingSummary({ id: 42 })).toThrow();
+	});
+	it("returns parsed input on valid", () => {
+		expect(validateGetDrawerEmbeddingSummary({ id: "abc" })).toEqual({ id: "abc" });
 	});
 });
 

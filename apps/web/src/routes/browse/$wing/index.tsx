@@ -1,6 +1,6 @@
 import { ScopeChip } from "@memui/ui/components";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { type FC, useCallback, useMemo } from "react";
 import { getRoomTree, listDrawerSummariesByWing } from "../../../server/functions";
 import { ROOM_TREE_QUERY_KEY } from "../-components/use-room-tree";
@@ -10,6 +10,7 @@ const PAGE_SIZE = 100;
 
 const WingPage: FC = () => {
 	const { wing } = Route.useParams();
+	const navigate = useNavigate();
 
 	const treeQuery = useQuery({
 		queryKey: ROOM_TREE_QUERY_KEY,
@@ -39,6 +40,13 @@ const WingPage: FC = () => {
 		query.fetchNextPage();
 	}, [query.fetchNextPage]);
 
+	const handleSelect = useCallback(
+		(id: string) => {
+			navigate({ to: ".", search: (s) => ({ ...s, drawer: id }) });
+		},
+		[navigate],
+	);
+
 	const errorMessage = query.error instanceof Error ? query.error.message : undefined;
 
 	return (
@@ -55,6 +63,7 @@ const WingPage: FC = () => {
 					hasNextPage={Boolean(query.hasNextPage)}
 					isFetchingNextPage={query.isFetchingNextPage}
 					onLoadMore={handleLoadMore}
+					onSelect={handleSelect}
 					emptyTitle="No drawers in this wing yet"
 					emptyDescription="Mine some memories with `mempalace mine` to fill it up."
 				/>

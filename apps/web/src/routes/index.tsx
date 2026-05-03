@@ -1,51 +1,69 @@
 import { CommandBar, EmptyState, type CommandAction } from "@memui/ui/components";
-import { Button } from "@memui/ui/primitives";
-import { createFileRoute } from "@tanstack/react-router";
-import { type FC, useState } from "react";
-
-const placeholderActions: CommandAction[] = [
-	{
-		id: "browse",
-		label: "Open browse",
-		description: "Walk wings, rooms, and drawers",
-		group: "Navigate",
-		keywords: ["wings", "rooms", "drawers"],
-		shortcut: ["g", "b"],
-		run: () => {},
-	},
-	{
-		id: "refresh",
-		label: "Refresh palace",
-		description: "Re-read SQLite and re-probe MCP",
-		group: "Palace",
-		keywords: ["reload", "sync"],
-		run: () => {},
-	},
-	{
-		id: "reconnect",
-		label: "Reconnect MCP",
-		description: "Probe mempalace-mcp again",
-		group: "Palace",
-		keywords: ["mcp", "connection"],
-		run: () => {},
-	},
-	{
-		id: "search",
-		label: "Semantic search",
-		description: "Query embeddings across the palace",
-		group: "Find",
-		keywords: ["query", "embeddings"],
-		shortcut: ["/"],
-		run: () => {},
-	},
-];
+import { Button, toast } from "@memui/ui/primitives";
+import { useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { type FC, useMemo, useState } from "react";
+import { reconnectMcp } from "../server/functions";
 
 const HomePage: FC = () => {
 	const [open, setOpen] = useState(false);
+	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 
 	const handleOpenCommandBar = () => {
 		setOpen(true);
 	};
+
+	const actions = useMemo<CommandAction[]>(
+		() => [
+			{
+				id: "browse",
+				label: "Open browse",
+				description: "Walk wings, rooms, and drawers",
+				group: "Navigate",
+				keywords: ["wings", "rooms", "drawers"],
+				shortcut: ["g", "b"],
+				run: () => {
+					setOpen(false);
+					void navigate({ to: "/browse" });
+				},
+			},
+			{
+				id: "refresh",
+				label: "Refresh palace",
+				description: "Re-read SQLite and re-probe MCP",
+				group: "Palace",
+				keywords: ["reload", "sync"],
+				run: () => {
+					setOpen(false);
+					void queryClient.invalidateQueries({ queryKey: ["palace"] });
+					toast.success("Palace queries refreshed");
+				},
+			},
+			{
+				id: "reconnect",
+				label: "Reconnect MCP",
+				description: "Probe mempalace-mcp again",
+				group: "Palace",
+				keywords: ["mcp", "connection"],
+				run: () => {
+					setOpen(false);
+					void (async () => {
+						try {
+							await reconnectMcp();
+							await queryClient.invalidateQueries({ queryKey: ["palace"] });
+							await queryClient.invalidateQueries({ queryKey: ["connection", "status"] });
+							toast.success("MCP reconnected");
+						} catch (err) {
+							const message = err instanceof Error ? err.message : String(err);
+							toast.error("MCP reconnect failed", { description: message });
+						}
+					})();
+				},
+			},
+		],
+		[navigate, queryClient],
+	);
 
 	return (
 		<main className="flex min-h-screen items-center justify-center p-6">
@@ -60,7 +78,7 @@ const HomePage: FC = () => {
 					}
 				/>
 				<CommandBar
-					actions={placeholderActions}
+					actions={actions}
 					open={open}
 					onOpenChange={setOpen}
 					placeholder="Try Cmd+K — search, browse, reconnect…"

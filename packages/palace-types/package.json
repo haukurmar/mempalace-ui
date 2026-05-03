@@ -1,0 +1,64 @@
+{
+	"name": "@memui/palace-types",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Shared TypeScript types for the MemPalace domain model — wings, rooms, drawers, closets, tunnels, provenance, embeddings, metadata, search.",
+	"type": "module",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"default": "./src/index.ts"
+		},
+		"./drawer": {
+			"types": "./src/drawer.ts",
+			"default": "./src/drawer.ts"
+		},
+		"./wing": {
+			"types": "./src/wing.ts",
+			"default": "./src/wing.ts"
+		},
+		"./room": {
+			"types": "./src/room.ts",
+			"default": "./src/room.ts"
+		},
+		"./closet": {
+			"types": "./src/closet.ts",
+			"default": "./src/closet.ts"
+		},
+		"./tunnel": {
+			"types": "./src/tunnel.ts",
+			"default": "./src/tunnel.ts"
+		},
+		"./provenance": {
+			"types": "./src/provenance.ts",
+			"default": "./src/provenance.ts"
+		},
+		"./embedding": {
+			"types": "./src/embedding.ts",
+			"default": "./src/embedding.ts"
+		},
+		"./metadata": {
+			"types": "./src/metadata.ts",
+			"default": "./src/metadata.ts"
+		},
+		"./search": {
+			"types": "./src/search.ts",
+			"default": "./src/search.ts"
+		}
+	},
+	"files": [
+		"src"
+	],
+	"scripts": {
+		"check-types": "tsc --noEmit",
+		"lint": "biome lint .",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@memui/biome-config": "workspace:*",
+		"@memui/typescript-config": "workspace:*"
+	}
+}

@@ -1,9 +1,24 @@
+export { CommandBar } from "./command-bar";
+export type { CommandAction, CommandBarProps } from "./command-bar";
 export { DrawerCard } from "./drawer-card";
 export type { DrawerCardProps, DrawerSummary } from "./drawer-card";
+export { DrawerEditor } from "./drawer-editor";
+export type { DrawerEditorProps } from "./drawer-editor";
 export { EmptyState } from "./empty-state";
 export type { EmptyStateProps } from "./empty-state";
 export { ErrorState } from "./error-state";
 export type { ErrorStateProps } from "./error-state";
+export { FilterRuleBuilder, fromWhereClause, toWhereClause } from "./filter-rule-builder";
+export type {
+	FieldDefinition,
+	FieldType,
+	FilterRuleBuilderProps,
+	Group,
+	GroupOperator,
+	Operator,
+	Rule,
+	WhereClause,
+} from "./filter-rule-builder";
 export { KeyboardHint } from "./keyboard-hint";
 export type { KeyboardHintProps } from "./keyboard-hint";
 export { LoadingState } from "./loading-state";

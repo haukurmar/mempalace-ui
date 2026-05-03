@@ -1,4 +1,4 @@
-import { Button } from "../../primitives";
+import { Button } from "@memui/ui/primitives";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PlugZap } from "lucide-react";
 import { ErrorState } from "./error-state";

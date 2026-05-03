@@ -1,16 +1,5 @@
 {
 	"extends": "@memui/typescript-config/react-app.json",
-	"compilerOptions": {
-		"baseUrl": ".",
-		"paths": {
-			"@memui/ui/primitives": ["./src/primitives"],
-			"@memui/ui/primitives/*": ["./src/primitives/*"],
-			"@memui/ui/components": ["./src/components"],
-			"@memui/ui/components/*": ["./src/components/*"],
-			"@memui/ui/lib/*": ["./src/lib/*"],
-			"@memui/ui/hooks/*": ["./src/hooks/*"]
-		}
-	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules"]
 }

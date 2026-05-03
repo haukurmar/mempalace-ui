@@ -1,0 +1,30 @@
+{
+	"name": "app-storybook",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Storybook app for the @memui/ui design system",
+	"type": "module",
+	"scripts": {
+		"dev": "storybook dev -p 6006",
+		"build": "storybook build",
+		"check-types": "tsc --noEmit",
+		"lint": "biome lint .",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@memui/biome-config": "workspace:*",
+		"@memui/design-tokens": "workspace:*",
+		"@memui/typescript-config": "workspace:*",
+		"@memui/ui": "workspace:*",
+		"@storybook/react-vite": "10.3.6",
+		"@tailwindcss/vite": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"storybook": "10.3.6",
+		"tailwindcss": "catalog:",
+		"vite": "7.3.2"
+	}
+}

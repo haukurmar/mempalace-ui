@@ -1,0 +1,5 @@
+{
+	"extends": "@memui/typescript-config/react-app.json",
+	"include": ["src/**/*"],
+	"exclude": ["node_modules"]
+}

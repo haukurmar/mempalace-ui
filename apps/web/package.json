@@ -1,0 +1,39 @@
+{
+	"name": "web",
+	"version": "0.0.0",
+	"private": true,
+	"description": "MemPalace local web UI",
+	"type": "module",
+	"sideEffects": false,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"start": "node dist/server/server.js",
+		"check-types": "tsc --noEmit",
+		"lint": "biome lint .",
+		"format": "biome format --write ."
+	},
+	"dependencies": {
+		"@memui/design-tokens": "workspace:*",
+		"@memui/ui": "workspace:*",
+		"@tanstack/react-query": "catalog:",
+		"@tanstack/react-router": "catalog:",
+		"@tanstack/react-router-ssr-query": "1.166.12",
+		"@tanstack/react-start": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "catalog:",
+		"@memui/biome-config": "workspace:*",
+		"@memui/typescript-config": "workspace:*",
+		"@tailwindcss/vite": "catalog:",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@vitejs/plugin-react": "6.0.1",
+		"tailwindcss": "catalog:",
+		"vite": "catalog:"
+	}
+}

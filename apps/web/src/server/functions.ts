@@ -3,16 +3,22 @@ import { getConnection } from "./connection";
 import {
 	findTunnelsHandler,
 	getDrawerHandler,
+	getRoomTreeHandler,
 	getStatusHandler,
+	listDrawerSummariesByRoomHandler,
+	listDrawerSummariesByWingHandler,
 	listDrawersByRoomHandler,
 	listRoomsHandler,
 	listWingsHandler,
+	reconnectMcpHandler,
 	searchSemanticHandler,
 } from "./handlers";
 import { getLastChangeAt } from "./watch";
 import {
 	validateFindTunnels,
 	validateGetDrawer,
+	validateListDrawerSummariesByRoom,
+	validateListDrawerSummariesByWing,
 	validateListDrawersByRoom,
 	validateListRooms,
 	validateSearchSemantic,
@@ -41,6 +47,25 @@ export const listDrawersByRoom = createServerFn({ method: "GET" })
 		const conn = await getConnection();
 		return listDrawersByRoomHandler(conn, data);
 	});
+
+export const listDrawerSummariesByRoom = createServerFn({ method: "GET" })
+	.inputValidator(validateListDrawerSummariesByRoom)
+	.handler(async ({ data }) => {
+		const conn = await getConnection();
+		return listDrawerSummariesByRoomHandler(conn, data);
+	});
+
+export const listDrawerSummariesByWing = createServerFn({ method: "GET" })
+	.inputValidator(validateListDrawerSummariesByWing)
+	.handler(async ({ data }) => {
+		const conn = await getConnection();
+		return listDrawerSummariesByWingHandler(conn, data);
+	});
+
+export const getRoomTree = createServerFn({ method: "GET" }).handler(async () => {
+	const conn = await getConnection();
+	return getRoomTreeHandler(conn);
+});
 
 export const getDrawer = createServerFn({ method: "GET" })
 	.inputValidator(validateGetDrawer)

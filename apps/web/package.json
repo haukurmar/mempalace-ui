@@ -24,6 +24,7 @@
 		"@tanstack/react-router": "catalog:",
 		"@tanstack/react-router-ssr-query": "1.166.12",
 		"@tanstack/react-start": "catalog:",
+		"@tanstack/react-virtual": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:"
 	},

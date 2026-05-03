@@ -1,6 +1,8 @@
 import type {
 	FindTunnelsInput,
 	GetDrawerInput,
+	ListDrawerSummariesByRoomInput,
+	ListDrawerSummariesByWingInput,
 	ListDrawersByRoomInput,
 	ListRoomsInput,
 	SearchSemanticInput,
@@ -66,6 +68,30 @@ export const validateListDrawersByRoom = (raw: unknown): ListDrawersByRoomInput 
 	const out: ListDrawersByRoomInput = { wingId };
 	const roomId = optString(raw.roomId, "roomId");
 	if (roomId !== undefined) out.roomId = roomId;
+	const limit = optPositiveInt(raw.limit, "limit");
+	if (limit !== undefined) out.limit = limit;
+	const offset = optNonNegativeInt(raw.offset, "offset");
+	if (offset !== undefined) out.offset = offset;
+	return out;
+};
+
+export const validateListDrawerSummariesByRoom = (raw: unknown): ListDrawerSummariesByRoomInput => {
+	if (!isObject(raw)) throw new TypeError("listDrawerSummariesByRoom input must be an object");
+	const wingId = reqString(raw.wingId, "wingId");
+	const out: ListDrawerSummariesByRoomInput = { wingId };
+	const roomId = optString(raw.roomId, "roomId");
+	if (roomId !== undefined) out.roomId = roomId;
+	const limit = optPositiveInt(raw.limit, "limit");
+	if (limit !== undefined) out.limit = limit;
+	const offset = optNonNegativeInt(raw.offset, "offset");
+	if (offset !== undefined) out.offset = offset;
+	return out;
+};
+
+export const validateListDrawerSummariesByWing = (raw: unknown): ListDrawerSummariesByWingInput => {
+	if (!isObject(raw)) throw new TypeError("listDrawerSummariesByWing input must be an object");
+	const wingId = reqString(raw.wingId, "wingId");
+	const out: ListDrawerSummariesByWingInput = { wingId };
 	const limit = optPositiveInt(raw.limit, "limit");
 	if (limit !== undefined) out.limit = limit;
 	const offset = optNonNegativeInt(raw.offset, "offset");

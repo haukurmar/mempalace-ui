@@ -1,5 +1,5 @@
 import { type Connection, IncompatiblePalaceError } from "@memui/palace-clients";
-import type { Drawer } from "@memui/palace-types/drawer";
+import type { Drawer, DrawerSummary } from "@memui/palace-types/drawer";
 import type { Room } from "@memui/palace-types/room";
 import type { SearchResponse } from "@memui/palace-types/search";
 import type { Tunnel } from "@memui/palace-types/tunnel";
@@ -71,6 +71,68 @@ export const listDrawersByRoomHandler = async (
 ): Promise<Drawer[]> => {
 	assertSqliteReady(conn);
 	return conn.sqlite.listDrawersByRoom(input);
+};
+
+export type ListDrawerSummariesByRoomInput = {
+	wingId: string;
+	roomId?: string;
+	limit?: number;
+	offset?: number;
+};
+
+export const listDrawerSummariesByRoomHandler = async (
+	conn: Connection,
+	input: ListDrawerSummariesByRoomInput,
+): Promise<DrawerSummary[]> => {
+	assertSqliteReady(conn);
+	return conn.sqlite.listDrawerSummariesByRoom(input);
+};
+
+export type ListDrawerSummariesByWingInput = {
+	wingId: string;
+	limit?: number;
+	offset?: number;
+};
+
+export const listDrawerSummariesByWingHandler = async (
+	conn: Connection,
+	input: ListDrawerSummariesByWingInput,
+): Promise<DrawerSummary[]> => {
+	assertSqliteReady(conn);
+	return conn.sqlite.listDrawerSummariesByWing(input);
+};
+
+export type RoomTreeRoom = {
+	readonly id: string;
+	readonly name: string;
+	readonly drawerCount: number;
+};
+
+export type RoomTreeWing = {
+	readonly id: string;
+	readonly name: string;
+	readonly drawerCount: number;
+	readonly rooms: ReadonlyArray<RoomTreeRoom>;
+};
+
+export type RoomTreeData = {
+	readonly wings: ReadonlyArray<RoomTreeWing>;
+};
+
+export const getRoomTreeHandler = async (conn: Connection): Promise<RoomTreeData> => {
+	assertSqliteReady(conn);
+	const wings = await conn.sqlite.listWings();
+	const wingsWithRooms: RoomTreeWing[] = [];
+	for (const wing of wings) {
+		const rooms = await conn.sqlite.listRooms({ wingId: wing.id });
+		wingsWithRooms.push({
+			id: wing.id,
+			name: wing.name,
+			drawerCount: wing.drawerCount,
+			rooms: rooms.map((r) => ({ id: r.id, name: r.name, drawerCount: r.drawerCount })),
+		});
+	}
+	return { wings: wingsWithRooms };
 };
 
 export type GetDrawerInput = { id: string };

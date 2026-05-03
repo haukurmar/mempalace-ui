@@ -93,3 +93,9 @@ export const getPalaceChangeStamp = createServerFn({ method: "GET" }).handler(as
 	await getConnection();
 	return { changedAt: getLastChangeAt() };
 });
+
+export const reconnectMcp = createServerFn({ method: "POST" }).handler(async () => {
+	const conn = await getConnection();
+	await reconnectMcpHandler(conn);
+	return { ok: true } as const;
+});

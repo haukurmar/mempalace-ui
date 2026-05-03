@@ -170,3 +170,15 @@ export const findTunnelsHandler = async (
 	assertMcpReady(conn);
 	return conn.mcp.findTunnels(input);
 };
+
+/**
+ * Re-probe `mempalace-mcp`. Intentionally does NOT call `assertMcpReady` —
+ * "unavailable" is the most useful precondition for asking the transport
+ * to try again. The underlying client triggers `ensure()` → `boot()`,
+ * which respawns the child process if the bounded reconnect window
+ * allows it. Surfaces transport errors (`McpUnavailableError`,
+ * `IncompatibleMcpError`) to the caller.
+ */
+export const reconnectMcpHandler = async (conn: Connection): Promise<void> => {
+	await conn.mcp.reconnect();
+};

@@ -50,11 +50,11 @@
 
 ## 6. Shared types and clients
 
-- [ ] 6.1 Scaffold `packages/palace-types/` with `Drawer`, `Wing`, `Room`, `Closet`, `Tunnel`, `Provenance`, `EmbeddingSummary` interfaces matching MemPalace v3.3.4 schema
-- [ ] 6.2 Scaffold `packages/palace-clients/` (Node-only — never imported into client code paths) with two clients: `sqliteClient` (better-sqlite3, read-only WAL) and `mcpClient` (JSON-RPC over the local mempalace-mcp stdio or HTTP transport — research and pick)
-- [ ] 6.3 Implement `getDrawer`, `listDrawersByRoom`, `listWings`, `listRooms`, `getStatus`, `getDrawerEmbeddingSummary` in `sqliteClient`
-- [ ] 6.4 Implement `searchSemantic`, `updateDrawer`, `deleteDrawer`, `addDrawer`, `findTunnels` in `mcpClient`
-- [ ] 6.5 Add a `connect()` orchestrator that probes both clients and returns a connection status + version metadata
+- [x] 6.1 Scaffold `packages/palace-types/` with `Drawer`, `Wing`, `Room`, `Closet`, `Tunnel`, `Provenance`, `EmbeddingSummary` interfaces matching MemPalace v3.3.4 schema
+- [x] 6.2 Scaffold `packages/palace-clients/` (Node-only — never imported into client code paths) with two clients: `sqliteClient` (better-sqlite3, read-only with busy_timeout) and `mcpClient` (JSON-RPC over the local mempalace-mcp stdio or HTTP transport — research and pick)
+- [x] 6.3 Implement `getDrawer`, `listDrawersByRoom`, `listWings`, `listRooms`, `getStatus`, `getDrawerEmbeddingSummary` in `sqliteClient`
+- [x] 6.4 Implement `searchSemantic`, `updateDrawer`, `deleteDrawer`, `addDrawer`, `findTunnels` in `mcpClient` — read-only scope this wave: `searchSemantic` and `findTunnels` shipped; write methods (`updateDrawer`, `deleteDrawer`, `addDrawer`) deferred per Hawk's 2026-05-03 scope decision until the curation feature needs them
+- [x] 6.5 Add a `connect()` orchestrator that probes both clients and returns a connection status + version metadata
 - [ ] 6.6 Add unit tests with a fixture palace database for read-path operations
 - [ ] 6.7 Add integration tests that spin up `mempalace-mcp` against a fixture palace for write-path operations
 

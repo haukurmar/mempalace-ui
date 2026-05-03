@@ -16,3 +16,7 @@ coverage
 .turbo
 
 storybook-static
+
+# Playwright / Storybook test-runner failure artifacts (snapshot baselines under __snapshots__/ ARE committed)
+test-results
+playwright-report

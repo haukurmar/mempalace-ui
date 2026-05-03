@@ -9,7 +9,8 @@
 		"build": "storybook build",
 		"check-types": "tsc --noEmit",
 		"lint": "biome lint .",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"test-storybook": "test-storybook"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
@@ -18,9 +19,11 @@
 		"@memui/typescript-config": "workspace:*",
 		"@memui/ui": "workspace:*",
 		"@storybook/react-vite": "10.3.6",
+		"@storybook/test-runner": "0.24.3",
 		"@tailwindcss/vite": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
+		"playwright": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"storybook": "10.3.6",

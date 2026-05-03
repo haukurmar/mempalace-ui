@@ -1,2 +1,4 @@
 @import "tailwindcss";
 @import "@memui/design-tokens/tailwind.preset.css";
+
+@source "../../../packages/ui/src/**/*.{ts,tsx}";

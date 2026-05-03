@@ -1,5 +1,5 @@
 import type { Connection } from "@memui/palace-clients";
-import type { Drawer } from "@memui/palace-types/drawer";
+import type { Drawer, DrawerSummary } from "@memui/palace-types/drawer";
 import type { Room } from "@memui/palace-types/room";
 import type { SearchResponse } from "@memui/palace-types/search";
 import type { Tunnel } from "@memui/palace-types/tunnel";
@@ -9,10 +9,14 @@ import { IncompatibleMcpVersionError, McpUnavailableError, PalaceUnavailableErro
 import {
 	findTunnelsHandler,
 	getDrawerHandler,
+	getRoomTreeHandler,
 	getStatusHandler,
+	listDrawerSummariesByRoomHandler,
+	listDrawerSummariesByWingHandler,
 	listDrawersByRoomHandler,
 	listRoomsHandler,
 	listWingsHandler,
+	reconnectMcpHandler,
 	searchSemanticHandler,
 } from "./handlers";
 
@@ -22,8 +26,11 @@ type MockOpts = {
 	mcpStatus?: Connection["status"]["mcp"];
 	wings?: Wing[];
 	rooms?: Room[];
+	roomsByWing?: Record<string, Room[]>;
 	drawers?: Drawer[];
 	drawerById?: Drawer | null;
+	summariesByRoom?: DrawerSummary[];
+	summariesByWing?: DrawerSummary[];
 	search?: SearchResponse;
 	tunnels?: Tunnel[];
 };
@@ -40,9 +47,13 @@ const makeConnection = (opts: MockOpts = {}): Connection => {
 			getStatus: vi.fn(),
 			getDrawer: vi.fn(async (_id: string) => opts.drawerById ?? null),
 			listDrawersByRoom: vi.fn(async () => opts.drawers ?? []),
-			listDrawerSummariesByRoom: vi.fn(async () => []),
+			listDrawerSummariesByRoom: vi.fn(async () => opts.summariesByRoom ?? []),
+			listDrawerSummariesByWing: vi.fn(async () => opts.summariesByWing ?? []),
 			listWings: vi.fn(async () => opts.wings ?? []),
-			listRooms: vi.fn(async () => opts.rooms ?? []),
+			listRooms: vi.fn(async (o?: { wingId?: string }) => {
+				if (opts.roomsByWing && o?.wingId) return opts.roomsByWing[o.wingId] ?? [];
+				return opts.rooms ?? [];
+			}),
 			getDrawerEmbeddingSummary: vi.fn(),
 			dispose: vi.fn(),
 		},
@@ -192,5 +203,103 @@ describe("findTunnelsHandler", () => {
 		const conn = makeConnection({ tunnels: [] });
 		await findTunnelsHandler(conn, { wingA: "code" });
 		expect(conn.mcp.findTunnels).toHaveBeenCalledWith({ wingA: "code" });
+	});
+});
+
+describe("listDrawerSummariesByRoomHandler", () => {
+	it("forwards args to the sqlite client", async () => {
+		const conn = makeConnection({ summariesByRoom: [] });
+		await listDrawerSummariesByRoomHandler(conn, {
+			wingId: "code",
+			roomId: "general",
+			limit: 50,
+			offset: 0,
+		});
+		expect(conn.sqlite.listDrawerSummariesByRoom).toHaveBeenCalledWith({
+			wingId: "code",
+			roomId: "general",
+			limit: 50,
+			offset: 0,
+		});
+	});
+
+	it("throws PalaceUnavailableError when sqlite is errored", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		await expect(listDrawerSummariesByRoomHandler(conn, { wingId: "code" })).rejects.toBeInstanceOf(
+			PalaceUnavailableError,
+		);
+	});
+});
+
+describe("listDrawerSummariesByWingHandler", () => {
+	it("forwards args to the sqlite client", async () => {
+		const conn = makeConnection({ summariesByWing: [] });
+		await listDrawerSummariesByWingHandler(conn, { wingId: "code", limit: 100, offset: 200 });
+		expect(conn.sqlite.listDrawerSummariesByWing).toHaveBeenCalledWith({
+			wingId: "code",
+			limit: 100,
+			offset: 200,
+		});
+	});
+
+	it("throws PalaceUnavailableError when sqlite is errored", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		await expect(listDrawerSummariesByWingHandler(conn, { wingId: "code" })).rejects.toBeInstanceOf(
+			PalaceUnavailableError,
+		);
+	});
+});
+
+describe("reconnectMcpHandler", () => {
+	it("delegates to conn.mcp.reconnect()", async () => {
+		const conn = makeConnection();
+		await reconnectMcpHandler(conn);
+		expect(conn.mcp.reconnect).toHaveBeenCalledTimes(1);
+	});
+
+	it("invokes reconnect even when MCP is currently unavailable", async () => {
+		const conn = makeConnection({ mcpStatus: { status: "unavailable", reason: "spawn ENOENT" } });
+		await reconnectMcpHandler(conn);
+		expect(conn.mcp.reconnect).toHaveBeenCalledTimes(1);
+	});
+
+	it("propagates errors from the underlying client", async () => {
+		const conn = makeConnection();
+		(conn.mcp.reconnect as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("boom"));
+		await expect(reconnectMcpHandler(conn)).rejects.toThrow("boom");
+	});
+});
+
+describe("getRoomTreeHandler", () => {
+	it("composes wings and rooms into a nested structure", async () => {
+		const wings: Wing[] = [
+			{ id: "code", name: "code", drawerCount: 12 },
+			{ id: "docs", name: "docs", drawerCount: 4 },
+		];
+		const roomsByWing: Record<string, Room[]> = {
+			code: [
+				{ id: "code/general", name: "general", wingId: "code", drawerCount: 8 },
+				{ id: "code/decision", name: "decision", wingId: "code", drawerCount: 4 },
+			],
+			docs: [{ id: "docs/general", name: "general", wingId: "docs", drawerCount: 4 }],
+		};
+		const conn = makeConnection({ wings, roomsByWing });
+		const tree = await getRoomTreeHandler(conn);
+		expect(tree.wings).toHaveLength(2);
+		expect(tree.wings[0]).toEqual({
+			id: "code",
+			name: "code",
+			drawerCount: 12,
+			rooms: [
+				{ id: "code/general", name: "general", drawerCount: 8 },
+				{ id: "code/decision", name: "decision", drawerCount: 4 },
+			],
+		});
+		expect(tree.wings[1].rooms).toHaveLength(1);
+	});
+
+	it("throws PalaceUnavailableError when sqlite is errored", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		await expect(getRoomTreeHandler(conn)).rejects.toBeInstanceOf(PalaceUnavailableError);
 	});
 });

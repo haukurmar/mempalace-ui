@@ -68,13 +68,13 @@
 
 ## 8. Server functions (inside apps/web)
 
-- [ ] 8.1 Add a server-side bootstrap that resolves `MEMPAL_PALACE_PATH`, opens SQLite read-only with busy_timeout, and probes `mempalace-mcp` once at boot; cache the connection state on a server-side singleton
-- [ ] 8.2 Implement the version compatibility gate (refuse to operate below v3.3.4); return a typed `IncompatiblePalaceError` from any server function when the gate fails
-- [ ] 8.3 Implement `getStatus`, `listWings`, `listRooms`, `listDrawersByRoom`, `getDrawer` as server functions calling `palace-clients/sqliteClient`
-- [ ] 8.4 Implement `searchSemantic`, `updateDrawer`, `deleteDrawer`, `addDrawer`, `findTunnels` as server functions calling `palace-clients/mcpClient`; throw a typed `McpUnavailableError` when MCP is offline
-- [ ] 8.5 Implement palace-dir filesystem watch on the server side with debounced (500ms) change events; expose them to the client via TanStack Start streaming or a polling server function (decide during this task)
-- [ ] 8.6 Add unit tests for each server function using a fixture palace
-- [ ] 8.7 Create a `/connection` route wired to `palace-connection` spec scenarios (resolved path, version gate, MCP banner)
+- [x] 8.1 Add a server-side bootstrap that resolves `MEMPAL_PALACE_PATH`, opens SQLite read-only with busy_timeout, and probes `mempalace-mcp` once at boot; cache the connection state on a server-side singleton
+- [x] 8.2 Implement the version compatibility gate (refuse to operate below v3.3.4); return a typed `IncompatiblePalaceError` from any server function when the gate fails
+- [x] 8.3 Implement `getStatus`, `listWings`, `listRooms`, `listDrawersByRoom`, `getDrawer` as server functions calling `palace-clients/sqliteClient`
+- [x] 8.4 Implement `searchSemantic`, `updateDrawer`, `deleteDrawer`, `addDrawer`, `findTunnels` as server functions calling `palace-clients/mcpClient`; throw a typed `McpUnavailableError` when MCP is offline — read-only scope this wave: `searchSemantic` and `findTunnels` shipped; write methods (`updateDrawer`, `deleteDrawer`, `addDrawer`) deferred per Hawk's 2026-05-03 scope decision (mirrors task 6.4 — palace-clients does not yet expose write methods either)
+- [x] 8.5 Implement palace-dir filesystem watch on the server side with debounced (500ms) change events; expose them to the client via TanStack Start streaming or a polling server function (decide during this task) — picked polling: `getPalaceChangeStamp` server function returns the debounced `lastChangeAt`; client `useQuery` polls every 5s and uses the value as a cache-bust signal
+- [x] 8.6 Add unit tests for each server function using a fixture palace — tests cover the underlying handlers (palace-clients composition), validators, and the version-gate-throw behavior; integration tests against a real fixture palace remain Phase 16's scope
+- [x] 8.7 Create a `/connection` route wired to `palace-connection` spec scenarios (resolved path, version gate, MCP banner)
 
 ## 9. Feature: raw palace browse
 

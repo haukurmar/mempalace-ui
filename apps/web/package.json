@@ -12,10 +12,13 @@
 		"start": "node dist/server/server.js",
 		"check-types": "tsc --noEmit",
 		"lint": "biome lint .",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@memui/design-tokens": "workspace:*",
+		"@memui/palace-clients": "workspace:*",
+		"@memui/palace-types": "workspace:*",
 		"@memui/ui": "workspace:*",
 		"@tanstack/react-query": "catalog:",
 		"@tanstack/react-router": "catalog:",
@@ -34,6 +37,7 @@
 		"@types/react-dom": "catalog:",
 		"@vitejs/plugin-react": "6.0.1",
 		"tailwindcss": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	}
 }

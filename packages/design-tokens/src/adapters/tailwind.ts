@@ -21,6 +21,7 @@ import { breakpoints } from "../breakpoints";
 import type { ColorFamily } from "../colors/types";
 import { palette } from "../palette";
 import { radius } from "../radius";
+import { shadcnSemanticMapping } from "../shadcn-semantic";
 import { spacing } from "../spacing";
 import { type FontRoleDefinition, typography } from "../typography";
 import { zIndices } from "../zIndices";
@@ -98,4 +99,12 @@ export const toTailwindTheme = (): string => {
 	}
 
 	return `@theme {\n${lines.join("\n")}\n}\n`;
+};
+
+export const toShadcnSemanticTheme = (): string => {
+	const lines: string[] = [];
+	for (const [role, value] of Object.entries(shadcnSemanticMapping)) {
+		lines.push(`\t--color-${role}: ${value};`);
+	}
+	return `@theme inline {\n${lines.join("\n")}\n}\n`;
 };

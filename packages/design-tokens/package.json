@@ -43,6 +43,10 @@
 			"types": "./src/zIndices.ts",
 			"default": "./src/zIndices.ts"
 		},
+		"./shadcn-semantic": {
+			"types": "./src/shadcn-semantic.ts",
+			"default": "./src/shadcn-semantic.ts"
+		},
 		"./tailwind": {
 			"types": "./src/adapters/tailwind.ts",
 			"default": "./src/adapters/tailwind.ts"

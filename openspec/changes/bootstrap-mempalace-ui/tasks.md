@@ -31,11 +31,11 @@
 - [x] 4.1 Build `EmptyState`, `LoadingState`, `ErrorState` with stories covering their canonical messaging
 - [x] 4.2 Build `KeyboardHint` (renders a key combo as styled `<kbd>` chips) with stories
 - [x] 4.3 Build `WingPill` and `ScopeChip` (small badges showing wing or room scope) with stories
-- [ ] 4.4 Build `MetadataTable` (the canonical key-value rendering used everywhere drawer metadata appears) with stories for nested objects and large value counts
-- [ ] 4.5 Build `ProvenanceFooter` (timestamp, source path, mining mode) with stories
-- [ ] 4.6 Build `DrawerCard` (compact card representation used in selection, search results, neighborhood panels) with stories
-- [ ] 4.7 Build `ResultRow` (search result row with snippet, scores, breadcrumb) with stories
-- [ ] 4.8 Build `RoomTree` (recursive tree component for the sidebar) with stories for empty / single-wing / many-wing palaces
+- [x] 4.4 Build `MetadataTable` (the canonical key-value rendering used everywhere drawer metadata appears) with stories for nested objects and large value counts
+- [x] 4.5 Build `ProvenanceFooter` (timestamp, source path, mining mode) with stories
+- [x] 4.6 Build `DrawerCard` (compact card representation used in selection, search results, neighborhood panels) with stories
+- [x] 4.7 Build `ResultRow` (search result row with snippet, scores, breadcrumb) with stories
+- [x] 4.8 Build `RoomTree` (recursive tree component for the sidebar) with stories for empty / single-wing / many-wing palaces
 - [ ] 4.9 Build `FilterRuleBuilder` (visual AND/OR groups with type-aware operators; round-trips to `$and`/`$or` JSON) with stories
 - [ ] 4.10 Build `CommandBar` (the `Cmd+K` palette shell — registers actions, shows history; integrated with keyboard registry from task group 11)
 - [ ] 4.11 Build `DrawerEditor` (markdown editor with live preview, used in edit + add) with stories

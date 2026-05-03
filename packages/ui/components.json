@@ -1,0 +1,20 @@
+{
+	"$schema": "https://ui.shadcn.com/schema.json",
+	"style": "new-york",
+	"rsc": false,
+	"tsx": true,
+	"tailwind": {
+		"config": "",
+		"css": "../../apps/app-storybook/src/index.css",
+		"baseColor": "neutral",
+		"cssVariables": true,
+		"prefix": ""
+	},
+	"aliases": {
+		"components": "@memui/ui/components",
+		"utils": "@memui/ui/lib/utils",
+		"ui": "@memui/ui/primitives",
+		"lib": "@memui/ui/lib",
+		"hooks": "@memui/ui/hooks"
+	}
+}

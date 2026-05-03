@@ -18,9 +18,9 @@
 
 ## 3. UI package skeleton + Storybook app
 
-- [ ] 3.1 Scaffold `packages/ui/` (`@memui/ui`) with `package.json`, tsconfig, and `src/{primitives,components,patterns,index.ts}` directories
-- [ ] 3.2 Scaffold `apps/app-storybook/` with Storybook 8 (Vite builder); configure it to consume `@memui/design-tokens` CSS globally and to surface every story file under `packages/ui/src/`
-- [ ] 3.3 Install shadcn/ui CLI and configure it to write into `packages/ui/src/primitives/`
+- [x] 3.1 Scaffold `packages/ui/` (`@memui/ui`) with `package.json`, tsconfig, and `src/{primitives,components,patterns,index.ts}` directories
+- [x] 3.2 Scaffold `apps/app-storybook/` with Storybook 8 (Vite builder); configure it to consume `@memui/design-tokens` CSS globally and to surface every story file under `packages/ui/src/`
+- [x] 3.3 Install shadcn/ui CLI and configure it to write into `packages/ui/src/primitives/`
 - [ ] 3.4 Install primitives needed for v1: `Button`, `Dialog`, `Popover`, `Command`, `Sheet`, `Tooltip`, `DropdownMenu`, `Input`, `Select`, `Toggle`, `Toast`, `Separator`, `ScrollArea`
 - [ ] 3.5 Replace every hex/arbitrary value in installed primitives with token references; verify the lint rule passes
 - [ ] 3.6 Add a Biome lint rule that forbids importing from `packages/ui/src/primitives/*` outside of `packages/ui` itself

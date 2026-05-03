@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@memui/ui/lib/utils";
+import { cn } from "../lib/utils";
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 import type * as React from "react";
 

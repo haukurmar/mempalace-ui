@@ -1,4 +1,4 @@
-import { cn } from "@memui/ui/lib/utils";
+import { cn } from "../lib/utils";
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import type * as React from "react";

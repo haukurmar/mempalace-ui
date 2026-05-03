@@ -24,3 +24,9 @@ catalog:
   "@codemirror/lang-markdown": 6.5.0
   react-markdown: 10.1.0
   remark-gfm: 4.0.1
+  better-sqlite3: 12.9.0
+  "@types/better-sqlite3": 7.6.13
+  "@modelcontextprotocol/sdk": 1.29.0
+
+onlyBuiltDependencies:
+  - better-sqlite3

@@ -11,5 +11,6 @@ export type EmbeddingSummary = {
 	min: number;
 	max: number;
 	model?: string;
-	preview?: readonly number[];
+	/** First N floats of the embedding vector for human-readable inspection. */
+	readonly preview: ReadonlyArray<number>;
 };

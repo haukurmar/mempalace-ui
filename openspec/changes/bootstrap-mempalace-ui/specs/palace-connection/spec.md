@@ -15,21 +15,22 @@ The system SHALL resolve the palace root directory at startup, defaulting to `~/
 
 #### Scenario: Missing palace surfaced clearly
 - **WHEN** the resolved path does not contain a `chroma.sqlite3`
-- **THEN** the server boots successfully but reports `status: "no-palace"` over tRPC
+- **THEN** the server boots successfully but reports `status: "no-palace"` via a server function
 - **AND** the UI shows an actionable empty-state explaining how to point the app at a palace
 
-### Requirement: Read-only WAL SQLite access
-The system SHALL open SQLite in WAL read-only mode so concurrent `mempalace mine` writers are never blocked and snapshot-isolated reads are guaranteed.
+### Requirement: Read-only SQLite access
+The system SHALL open SQLite in read-only mode with a busy timeout so the chromadb-managed rollback journal is never modified and concurrent `mempalace mine` writers can proceed without our reads holding write locks.
 
-#### Scenario: WAL mode applied
+#### Scenario: Read-only mode applied
 - **WHEN** the SQLite handle is opened
-- **THEN** the connection uses `PRAGMA journal_mode=WAL` and is opened with `mode=ro`
+- **THEN** the connection is opened with `readonly: true` and a 5000ms `busy_timeout`; the chromadb-managed journal mode (rollback) is not modified
 - **AND** writes via this handle are not possible at the database level
 
 #### Scenario: Concurrent mining tolerated
 - **WHEN** `mempalace mine` is actively writing to the palace
 - **AND** the UI issues a read query
 - **THEN** the read returns a consistent snapshot without errors
+- **AND** the read-only handle uses shared locks that the miner's short writes do not contend with for typical access patterns
 - **AND** the UI displays an "indexing in progress" indicator until writes settle
 
 ### Requirement: MCP availability probe
@@ -64,7 +65,7 @@ The system SHALL watch the palace directory and notify the frontend when `chroma
 
 #### Scenario: External write detected
 - **WHEN** `mempalace mine` completes and the palace file's mtime updates
-- **THEN** the server publishes a change event over a tRPC subscription
+- **THEN** the server publishes a change event via a TanStack Start streaming server function
 - **AND** the frontend invalidates affected TanStack Query caches
 - **AND** active views refetch transparently
 

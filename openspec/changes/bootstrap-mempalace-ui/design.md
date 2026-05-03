@@ -110,7 +110,7 @@ All packages publish under the `@memui/` npm scope; apps remain unscoped. Turbor
 
 The TanStack Start app boots a server-side initialization step that:
 1. Resolves the palace path (default `~/.mempalace/palace/`, override via `MEMPAL_PALACE_PATH` env)
-2. Opens SQLite in **WAL read-only** mode (`PRAGMA journal_mode=WAL`, `mode=ro`) — never blocks `mempalace mine` writers
+2. Opens SQLite in read-only mode (`readonly: true`, `busy_timeout=5000`); chromadb manages the journal mode (rollback journaling — we do NOT enable WAL, since switching journal mode would persist on disk and break the writer)
 3. Probes `mempalace-mcp` via `which` and a no-op JSON-RPC call. Caches the connection but doesn't fail boot if MCP is down — the UI surfaces a "MCP unavailable" banner and disables write actions.
 4. Watches the palace dir on the server side; pushes change events to the client via TanStack Start's streaming response or a polling server function (final mechanism decided during the palace-connection feature phase) so TanStack Query caches invalidate transparently.
 
@@ -121,7 +121,7 @@ Mutations go exclusively through `mempalace-mcp` (`mempalace_update_drawer`, `me
 ## Risks / Trade-offs
 
 - **better-sqlite3 native binding** → installs differently per OS/Node version. **Mitigation:** pin Node version via `.nvmrc`; document the prebuilt-binary fallback; CI matrix on macOS/Linux.
-- **SQLite read while mempalace writes** → potential read inconsistency mid-mining. **Mitigation:** WAL mode allows snapshot-isolated reads; UI shows a subtle "indexing" indicator when activity is detected; queries auto-refetch when activity ends.
+- **SQLite read while mempalace writes** → potential read inconsistency mid-mining. **Mitigation:** the `readonly: true` handle uses shared locks and chromadb's rollback-journal-based locking serializes against the writer; `busy_timeout=5000` lets brief contention wait rather than throw; UI shows a subtle "indexing" indicator when activity is detected; queries auto-refetch when activity ends.
 - **cosmograph at 87K nodes** is documented but not personally verified yet. **Mitigation:** the design-system phase includes a graph-prototype task that loads the real palace and benchmarks frame rate before locking in the choice. Fallback is PixiJS.
 - **MCP server may be on a different chromadb/MemPalace version than what the SQLite was written by** → drift. **Mitigation:** read schema version on connect; refuse to operate on versions older than v3.3.4 with a clear upgrade prompt.
 - **MemPalace MCP API is undocumented and may break across versions.** **Mitigation:** wrap every MCP call in `palace-clients/` with version-gated codepaths; integration tests pinned to a known mempalace version.

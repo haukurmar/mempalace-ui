@@ -24,7 +24,7 @@ The system SHALL place all shadcn/radix-derived components in `packages/ui/src/p
 
 #### Scenario: Primitive used directly only inside ui package
 - **WHEN** an app file imports a primitive directly (bypassing the composed layer)
-- **THEN** an ESLint rule flags the import
+- **THEN** a Biome lint rule flags the import
 - **AND** the rule explains that pages should consume composed components, not primitives
 
 ### Requirement: Composed component inventory

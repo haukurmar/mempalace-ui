@@ -43,10 +43,10 @@
 
 ## 5. Pattern layer
 
-- [ ] 5.1 Build `ListDetailLayout` (sidebar tree + main list + slide-over detail panel)
-- [ ] 5.2 Build `GraphPanelLayout` (full-canvas graph + bottom-anchored drawer panel + floating control cluster)
-- [ ] 5.3 Build `SettingsLayout` (left-nav + right pane)
-- [ ] 5.4 Document each pattern's intended use in a Storybook docs page
+- [x] 5.1 Build `ListDetailLayout` (sidebar tree + main list + slide-over detail panel)
+- [x] 5.2 Build `GraphPanelLayout` (full-canvas graph + bottom-anchored drawer panel + floating control cluster)
+- [x] 5.3 Build `SettingsLayout` (left-nav + right pane)
+- [x] 5.4 Document each pattern's intended use in a Storybook docs page
 
 ## 6. Shared types and clients
 

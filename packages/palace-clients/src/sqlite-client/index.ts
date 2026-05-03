@@ -8,6 +8,8 @@ import {
 	listDrawersByRoom,
 	type ListDrawerSummariesByRoomOpts,
 	listDrawerSummariesByRoom,
+	type ListDrawerSummariesByWingOpts,
+	listDrawerSummariesByWing,
 	type ListDrawersByRoomOpts,
 } from "./drawers";
 import { type EmbeddingSummaryResult, getDrawerEmbeddingSummary } from "./embeddings";
@@ -19,6 +21,7 @@ export type SqliteClient = {
 	getDrawer: (id: string) => Promise<Drawer | null>;
 	listDrawersByRoom: (opts: ListDrawersByRoomOpts) => Promise<Drawer[]>;
 	listDrawerSummariesByRoom: (opts: ListDrawerSummariesByRoomOpts) => Promise<DrawerSummary[]>;
+	listDrawerSummariesByWing: (opts: ListDrawerSummariesByWingOpts) => Promise<DrawerSummary[]>;
 	listWings: () => Promise<Wing[]>;
 	listRooms: (opts?: ListRoomsOpts) => Promise<Room[]>;
 	getDrawerEmbeddingSummary: (id: string) => Promise<EmbeddingSummaryResult>;
@@ -38,6 +41,7 @@ export const createSqliteClient = (opts: CreateSqliteClientOpts): SqliteClient =
 		getDrawer: (id) => getDrawer(conn, id, logger),
 		listDrawersByRoom: (o) => listDrawersByRoom(conn, o, logger),
 		listDrawerSummariesByRoom: (o) => listDrawerSummariesByRoom(conn, o),
+		listDrawerSummariesByWing: (o) => listDrawerSummariesByWing(conn, o),
 		listWings: () => listWings(conn),
 		listRooms: (o) => listRooms(conn, o),
 		getDrawerEmbeddingSummary: (id) => getDrawerEmbeddingSummary(conn, id),
@@ -47,7 +51,11 @@ export const createSqliteClient = (opts: CreateSqliteClientOpts): SqliteClient =
 
 export { IncompatiblePalaceError } from "./connection";
 export type { IncompatiblePalaceInfo } from "./connection";
-export type { ListDrawerSummariesByRoomOpts, ListDrawersByRoomOpts } from "./drawers";
+export type {
+	ListDrawerSummariesByRoomOpts,
+	ListDrawerSummariesByWingOpts,
+	ListDrawersByRoomOpts,
+} from "./drawers";
 export type { EmbeddingSummaryResult } from "./embeddings";
 export type { SqliteStatus } from "./status";
 export type { ListRoomsOpts } from "./wings";

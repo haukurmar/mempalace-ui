@@ -28,6 +28,7 @@ export type {
 	EmbeddingSummaryResult,
 	IncompatiblePalaceInfo,
 	ListDrawerSummariesByRoomOpts,
+	ListDrawerSummariesByWingOpts,
 	ListDrawersByRoomOpts,
 	ListRoomsOpts,
 	SqliteClient,

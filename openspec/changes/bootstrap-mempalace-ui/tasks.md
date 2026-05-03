@@ -60,11 +60,11 @@
 
 ## 7. TanStack Start app scaffold
 
-- [ ] 7.1 Scaffold `apps/web/` with TanStack Start, React 19, TypeScript, Tailwind consuming the `@memui/design-tokens` preset
-- [ ] 7.2 Configure file-based routes via TanStack Router; create the root layout and a placeholder `/` route
-- [ ] 7.3 Wire the root layout with `ToastProvider`, density `data-attribute` from settings, and the keyboard registry root
-- [ ] 7.4 Configure TanStack Query with a default staleTime appropriate for SQLite-backed reads; integrate with TanStack Start's hydration
-- [ ] 7.5 Document and lock the default port (3000 or override via `MEMPAL_UI_PORT`); bind to `localhost` only
+- [x] 7.1 Scaffold `apps/web/` with TanStack Start, React 19, TypeScript, Tailwind consuming the `@memui/design-tokens` preset
+- [x] 7.2 Configure file-based routes via TanStack Router; create the root layout and a placeholder `/` route
+- [x] 7.3 Wire the root layout with `Toaster` (sonner) at body root, `data-density="comfortable"` hardcoded on `<html>` (Phase 15 wires the localStorage source), and `<HeadContent />` for title/meta. Skip the keyboard registry root — Phase 11 owns it; `CommandBar` works standalone via its built-in `Cmd+K` listener.
+- [x] 7.4 Configure TanStack Query with a default staleTime appropriate for SQLite-backed reads; integrate with TanStack Start's hydration
+- [x] 7.5 Document and lock the default port (3000 or override via `MEMPAL_UI_PORT`); bind to `localhost` only
 
 ## 8. Server functions (inside apps/web)
 

@@ -68,7 +68,7 @@
 
 ## 8. Server functions (inside apps/web)
 
-- [ ] 8.1 Add a server-side bootstrap that resolves `MEMPAL_PALACE_PATH`, opens SQLite WAL read-only, and probes `mempalace-mcp` once at boot; cache the connection state on a server-side singleton
+- [ ] 8.1 Add a server-side bootstrap that resolves `MEMPAL_PALACE_PATH`, opens SQLite read-only with busy_timeout, and probes `mempalace-mcp` once at boot; cache the connection state on a server-side singleton
 - [ ] 8.2 Implement the version compatibility gate (refuse to operate below v3.3.4); return a typed `IncompatiblePalaceError` from any server function when the gate fails
 - [ ] 8.3 Implement `getStatus`, `listWings`, `listRooms`, `listDrawersByRoom`, `getDrawer` as server functions calling `palace-clients/sqliteClient`
 - [ ] 8.4 Implement `searchSemantic`, `updateDrawer`, `deleteDrawer`, `addDrawer`, `findTunnels` as server functions calling `palace-clients/mcpClient`; throw a typed `McpUnavailableError` when MCP is offline

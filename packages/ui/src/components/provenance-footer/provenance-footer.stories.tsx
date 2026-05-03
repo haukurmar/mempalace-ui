@@ -52,7 +52,15 @@ export const LongSourcePath: Story = {
 	),
 };
 
-const miningModes: MiningMode[] = ["manual", "auto", "imported", "synthetic"];
+const miningModes: MiningMode[] = [
+	"manual",
+	"auto",
+	"imported",
+	"synthetic",
+	"mempalace",
+	"mcp",
+	"unknown",
+];
 
 export const EachMiningMode: Story = {
 	args: {

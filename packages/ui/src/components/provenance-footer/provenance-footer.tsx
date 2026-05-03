@@ -3,7 +3,14 @@ import type { FC, ReactNode } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../primitives/tooltip";
 import { cn } from "../../lib/utils";
 
-export type MiningMode = "manual" | "auto" | "imported" | "synthetic";
+export type MiningMode =
+	| "manual"
+	| "auto"
+	| "imported"
+	| "synthetic"
+	| "mempalace"
+	| "mcp"
+	| "unknown";
 
 export type Provenance = {
 	createdAt: Date | string;
@@ -22,6 +29,9 @@ const MINING_MODE_TONE: Record<MiningMode, string> = {
 	auto: "border-primary-200 bg-primary-50 text-primary-800",
 	imported: "border-secondary-300 bg-secondary-100 text-secondary-900",
 	synthetic: "border-secondary-200 bg-secondary-0 text-secondary-700",
+	mempalace: "border-primary-200 bg-primary-50 text-primary-800",
+	mcp: "border-primary-300 bg-primary-100 text-primary-900",
+	unknown: "border-secondary-200 bg-secondary-0 text-secondary-600",
 };
 
 export const ProvenanceFooter: FC<ProvenanceFooterProps> = (props) => {

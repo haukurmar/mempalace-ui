@@ -16,6 +16,7 @@ Framework-neutral design tokens for mempalace-ui. The current consumer is Tailwi
 | **Typography** | `src/typography.ts` | Font roles (`body`, `heading`, `mono`), sizes, weights. |
 | **Breakpoints** | `src/breakpoints.ts` | Min-width breakpoints in logical pixels. |
 | **Z-Indices** | `src/zIndices.ts` | Named z-index layers for stacking-context management. |
+| **Shadcn semantic** | `src/shadcn-semantic.ts` | Maps shadcn role classes (`bg-popover`, `text-foreground`, `border-border`, `ring-ring`, etc.) to scale tokens. |
 
 Semantic and component tokens get added empirically as real UI patterns emerge — not speculatively up front.
 
@@ -57,7 +58,8 @@ If the same `size(n)` value keeps recurring, promote it to the scale.
 | `@memui/design-tokens/typography` | `src/typography.ts` | `typography` + type exports |
 | `@memui/design-tokens/breakpoints` | `src/breakpoints.ts` | `breakpoints` |
 | `@memui/design-tokens/zIndices` | `src/zIndices.ts` | `zIndices` |
-| `@memui/design-tokens/tailwind` | `src/adapters/tailwind.ts` | `toTailwindTheme()` — emits the `@theme` block as a string |
+| `@memui/design-tokens/shadcn-semantic` | `src/shadcn-semantic.ts` | `shadcnSemanticMapping` + types |
+| `@memui/design-tokens/tailwind` | `src/adapters/tailwind.ts` | `toTailwindTheme()`, `toShadcnSemanticTheme()` — emit `@theme` blocks as strings |
 | `@memui/design-tokens/tailwind.preset.css` | `dist/tailwind.preset.css` | Pre-built Tailwind v4 preset, generated from the modules above |
 
 ```ts
@@ -74,6 +76,16 @@ In a Tailwind v4 stylesheet:
 ```css
 @import "@memui/design-tokens/tailwind.preset.css";
 ```
+
+---
+
+### Shadcn semantic tokens
+
+shadcn primitives use Tailwind utility classes that resolve through a layer of role-named CSS variables (`--color-background`, `--color-foreground`, `--color-card`, `--color-card-foreground`, `--color-popover`, `--color-popover-foreground`, `--color-primary`, `--color-primary-foreground`, `--color-secondary`, `--color-secondary-foreground`, `--color-muted`, `--color-muted-foreground`, `--color-accent`, `--color-accent-foreground`, `--color-destructive`, `--color-destructive-foreground`, `--color-border`, `--color-input`, `--color-ring`).
+
+The mapping from those roles to our scale tokens lives in `src/shadcn-semantic.ts` — single source of truth. The generator emits it as a sibling `@theme inline { ... }` block in `dist/tailwind.preset.css` (the `inline` keyword is required so Tailwind v4 inlines the nested `var()` references at build time).
+
+Dark-mode support is a future addition: a second mapping object plus a `[data-theme="dark"]` selector wrapping its emitted block. Not shipped yet.
 
 ---
 

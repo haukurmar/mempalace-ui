@@ -7,6 +7,9 @@ export type { ColorFamily, ColorSwatch } from "./colors/types";
 // Palette (role mapping)
 export { palette, primary, secondary } from "./palette";
 export type { Palette } from "./palette";
+// Shadcn semantic mapping (role → scale token)
+export { shadcnSemanticMapping } from "./shadcn-semantic";
+export type { ShadcnSemanticMapping, ShadcnSemanticRole } from "./shadcn-semantic";
 // Scales
 export * from "./spacing";
 export * from "./radius";

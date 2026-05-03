@@ -27,6 +27,8 @@ catalog:
   better-sqlite3: 12.9.0
   "@types/better-sqlite3": 7.6.13
   "@modelcontextprotocol/sdk": 1.29.0
+  vite: 8.0.10
+  "@types/node": 25.6.0
 
 onlyBuiltDependencies:
   - better-sqlite3

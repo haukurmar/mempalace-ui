@@ -125,6 +125,7 @@ const stubSqliteClient = (err: Error): SqliteClient => {
 		getDrawer: reject,
 		listDrawersByRoom: reject,
 		listDrawerSummariesByRoom: reject,
+		listDrawerSummariesByWing: reject,
 		listWings: reject,
 		listRooms: reject,
 		getDrawerEmbeddingSummary: reject,

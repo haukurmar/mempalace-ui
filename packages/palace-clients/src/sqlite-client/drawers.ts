@@ -139,6 +139,12 @@ export const listDrawersByRoom = async (
 
 export type ListDrawerSummariesByRoomOpts = ListDrawersByRoomOpts;
 
+export type ListDrawerSummariesByWingOpts = {
+	wingId: string;
+	limit?: number;
+	offset?: number;
+};
+
 type SummaryCandidate = {
 	id: number;
 	embedding_id: string;
@@ -203,6 +209,62 @@ export const listDrawerSummariesByRoom = async (
 		? [opts.wingId, opts.roomId, ...segIds, limit, offset]
 		: [opts.wingId, ...segIds, limit, offset];
 
+	const rows = conn.db.prepare(sql).all(...params) as SummaryCandidate[];
+
+	const summaries: DrawerSummary[] = [];
+	for (const row of rows) {
+		if (!row.wing || !row.room) continue;
+		const summary: DrawerSummary = {
+			id: row.embedding_id,
+			contentSnippet: row.snippet ?? "",
+			wingId: row.wing,
+			roomId: row.room,
+			createdAt: row.created_at,
+		};
+		if (row.bytes !== null) {
+			summaries.push({ ...summary, bytes: row.bytes });
+		} else {
+			summaries.push(summary);
+		}
+	}
+	return summaries;
+};
+
+/**
+ * Wing-scoped variant of `listDrawerSummariesByRoom` — lists every
+ * drawer under a wing across all its rooms, ordered by recency.
+ * Used by the wing overview page where the room filter is omitted.
+ */
+export const listDrawerSummariesByWing = async (
+	conn: SqliteConnection,
+	opts: ListDrawerSummariesByWingOpts,
+): Promise<DrawerSummary[]> => {
+	const segIds = drawerSegmentIds(conn);
+	if (segIds.length === 0) return [];
+	const limit = clampLimit(opts.limit);
+	const offset = opts.offset ?? 0;
+
+	const innerSql = `SELECT em_w.id AS id, e.embedding_id AS embedding_id, e.created_at AS created_at
+		   FROM embedding_metadata em_w
+		   JOIN embeddings e ON e.id = em_w.id
+		   WHERE em_w.key = 'wing' AND em_w.string_value = ?
+		     AND e.segment_id IN (${placeholders(segIds.length)})
+		   ORDER BY e.created_at DESC, e.id DESC
+		   LIMIT ? OFFSET ?`;
+
+	const sql = `SELECT cand.id AS id,
+	                    cand.embedding_id AS embedding_id,
+	                    cand.created_at AS created_at,
+	                    MAX(CASE WHEN em.key = 'chroma:document' THEN length(em.string_value) END) AS bytes,
+	                    MAX(CASE WHEN em.key = 'chroma:document' THEN substr(em.string_value, 1, ${SNIPPET_BYTES}) END) AS snippet,
+	                    MAX(CASE WHEN em.key = 'wing' THEN em.string_value END) AS wing,
+	                    MAX(CASE WHEN em.key = 'room' THEN em.string_value END) AS room
+	             FROM (${innerSql}) cand
+	             LEFT JOIN embedding_metadata em ON em.id = cand.id
+	             GROUP BY cand.id, cand.embedding_id, cand.created_at
+	             ORDER BY cand.created_at DESC, cand.id DESC`;
+
+	const params: (string | number)[] = [opts.wingId, ...segIds, limit, offset];
 	const rows = conn.db.prepare(sql).all(...params) as SummaryCandidate[];
 
 	const summaries: DrawerSummary[] = [];

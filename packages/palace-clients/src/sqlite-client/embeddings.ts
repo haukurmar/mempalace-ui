@@ -3,6 +3,8 @@ import type { SqliteConnection } from "./connection";
 
 export type EmbeddingSummaryResult = EmbeddingSummary | { available: false };
 
+const PREVIEW_WINDOW_SIZE = 16;
+
 /**
  * Read the latest `embeddings_queue.vector` blob for a drawer and
  * compute summary stats. The queue may have been compacted away
@@ -44,11 +46,13 @@ export const getDrawerEmbeddingSummary = async (
 		sumSquares += v * v;
 	}
 	const norm = Math.sqrt(sumSquares);
+	const preview: ReadonlyArray<number> = Array.from(view.slice(0, PREVIEW_WINDOW_SIZE));
 
 	return {
 		dimensions,
 		norm,
 		min,
 		max,
+		preview,
 	};
 };

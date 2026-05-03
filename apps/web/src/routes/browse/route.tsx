@@ -1,9 +1,20 @@
-import { ErrorState, LoadingState, RoomTree, type RoomNode } from "@memui/ui/components";
+import { ErrorState, LoadingState, type RoomNode, RoomTree } from "@memui/ui/components";
 import { ListDetailLayout } from "@memui/ui/patterns";
-import { createFileRoute, Outlet, useNavigate, useParams } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { type FC, useMemo } from "react";
 import { getRoomTree } from "../../server/functions";
+import { DrawerDetail } from "./-components/drawer-detail";
 import { ROOM_TREE_QUERY_KEY, useRoomTree } from "./-components/use-room-tree";
+
+export type BrowseSearch = {
+	drawer?: string;
+};
+
+const validateBrowseSearch = (raw: Record<string, unknown>): BrowseSearch => {
+	const drawer = raw.drawer;
+	if (typeof drawer === "string" && drawer.length > 0) return { drawer };
+	return {};
+};
 
 const BrowseLayout: FC = () => {
 	const treeQuery = useRoomTree();
@@ -15,6 +26,8 @@ const BrowseLayout: FC = () => {
 			room: typeof p.room === "string" ? p.room : undefined,
 		}),
 	});
+	const search = useSearch({ from: "/browse" });
+	const drawerId = search.drawer;
 
 	const treeData = useMemo(() => {
 		if (!treeQuery.data) return { wings: [] };
@@ -42,14 +55,26 @@ const BrowseLayout: FC = () => {
 
 	const handleSelect = (id: string, kind: "wing" | "room") => {
 		if (kind === "wing") {
-			navigate({ to: "/browse/$wing", params: { wing: id } });
+			navigate({
+				to: "/browse/$wing",
+				params: { wing: id },
+				search: (s) => ({ ...s, drawer: undefined }),
+			});
 			return;
 		}
 		const slash = id.indexOf("/");
 		if (slash === -1) return;
 		const wingId = id.slice(0, slash);
 		const roomId = id.slice(slash + 1);
-		navigate({ to: "/browse/$wing/$room", params: { wing: wingId, room: roomId } });
+		navigate({
+			to: "/browse/$wing/$room",
+			params: { wing: wingId, room: roomId },
+			search: (s) => ({ ...s, drawer: undefined }),
+		});
+	};
+
+	const handleCloseDetail = () => {
+		navigate({ to: ".", search: (s) => ({ ...s, drawer: undefined }) });
 	};
 
 	const sidebar = (
@@ -77,13 +102,20 @@ const BrowseLayout: FC = () => {
 
 	return (
 		<div className="h-screen w-screen">
-			<ListDetailLayout sidebar={sidebar} main={<Outlet />} />
+			<ListDetailLayout
+				sidebar={sidebar}
+				main={<Outlet />}
+				detail={drawerId ? <DrawerDetail drawerId={drawerId} onClose={handleCloseDetail} /> : null}
+				detailOpen={Boolean(drawerId)}
+				onDetailClose={handleCloseDetail}
+			/>
 		</div>
 	);
 };
 
 export const Route = createFileRoute("/browse")({
 	component: BrowseLayout,
+	validateSearch: validateBrowseSearch,
 	loader: async ({ context }) => {
 		try {
 			await context.queryClient.ensureQueryData({

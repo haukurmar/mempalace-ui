@@ -81,8 +81,8 @@
 - [x] 9.1 Implement the `RoomTree` data source: a server function that returns the full structural tree with counts; loaded via TanStack Router route loader
 - [x] 9.2 Implement the `/browse/$wing` route showing a virtualized list of all drawers in a wing using `react-virtual`
 - [x] 9.3 Implement the `/browse/$wing/$room` route scoped to a single room
-- [ ] 9.4 Implement the drawer detail slide-over (`MetadataTable` + markdown render + raw toggle + embedding summary + provenance + closets + tunnels)
-- [ ] 9.5 Verify the route works end-to-end with MCP offline (read-only browse)
+- [x] 9.4 Implement the drawer detail slide-over (`MetadataTable` + markdown render + raw toggle + embedding summary + provenance + closets + tunnels)
+- [x] 9.5 Verify the route works end-to-end with MCP offline (read-only browse)
 - [ ] 9.6 Add Playwright integration tests for tree expand, virtualization frame budget, and detail panel field visibility
 
 ## 10. Feature: palace search

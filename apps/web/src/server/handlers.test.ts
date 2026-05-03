@@ -1,4 +1,4 @@
-import type { Connection } from "@memui/palace-clients";
+import type { Connection, EmbeddingSummaryResult } from "@memui/palace-clients";
 import type { Drawer, DrawerSummary } from "@memui/palace-types/drawer";
 import type { Room } from "@memui/palace-types/room";
 import type { SearchResponse } from "@memui/palace-types/search";
@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import { IncompatibleMcpVersionError, McpUnavailableError, PalaceUnavailableError } from "./errors";
 import {
 	findTunnelsHandler,
+	getDrawerEmbeddingSummaryHandler,
 	getDrawerHandler,
 	getRoomTreeHandler,
 	getStatusHandler,
@@ -33,6 +34,7 @@ type MockOpts = {
 	summariesByWing?: DrawerSummary[];
 	search?: SearchResponse;
 	tunnels?: Tunnel[];
+	embeddingSummary?: EmbeddingSummaryResult;
 };
 
 const makeConnection = (opts: MockOpts = {}): Connection => {
@@ -54,7 +56,9 @@ const makeConnection = (opts: MockOpts = {}): Connection => {
 				if (opts.roomsByWing && o?.wingId) return opts.roomsByWing[o.wingId] ?? [];
 				return opts.rooms ?? [];
 			}),
-			getDrawerEmbeddingSummary: vi.fn(),
+			getDrawerEmbeddingSummary: vi.fn(
+				async (): Promise<EmbeddingSummaryResult> => opts.embeddingSummary ?? { available: false },
+			),
 			dispose: vi.fn(),
 		},
 		mcp: {
@@ -160,6 +164,41 @@ describe("getDrawerHandler", () => {
 		const conn = makeConnection({ drawerById: null });
 		const result = await getDrawerHandler(conn, { id: "missing" });
 		expect(result).toBeNull();
+	});
+});
+
+describe("getDrawerEmbeddingSummaryHandler", () => {
+	it("returns the summary stats when the queue has the vector", async () => {
+		const preview = Array.from({ length: 16 }, (_, i) => i * 0.1);
+		const summary: EmbeddingSummaryResult = {
+			dimensions: 768,
+			norm: 12.34,
+			min: -0.5,
+			max: 0.5,
+			preview,
+		};
+		const conn = makeConnection({ embeddingSummary: summary });
+		const result = await getDrawerEmbeddingSummaryHandler(conn, { id: "abc" });
+		expect(result).toEqual(summary);
+		expect(result).toHaveProperty("preview");
+		if ("preview" in result) {
+			expect(result.preview).toHaveLength(16);
+			expect(result.preview).toEqual(preview);
+		}
+		expect(conn.sqlite.getDrawerEmbeddingSummary).toHaveBeenCalledWith("abc");
+	});
+
+	it("forwards the compacted-queue { available: false } shape", async () => {
+		const conn = makeConnection({ embeddingSummary: { available: false } });
+		const result = await getDrawerEmbeddingSummaryHandler(conn, { id: "abc" });
+		expect(result).toEqual({ available: false });
+	});
+
+	it("throws PalaceUnavailableError when sqlite is errored", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		await expect(getDrawerEmbeddingSummaryHandler(conn, { id: "abc" })).rejects.toBeInstanceOf(
+			PalaceUnavailableError,
+		);
 	});
 });
 

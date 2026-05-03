@@ -55,6 +55,7 @@
 		"@memui/biome-config": "workspace:*",
 		"@memui/design-tokens": "workspace:*",
 		"@memui/typescript-config": "workspace:*",
+		"@storybook/react-vite": "10.3.6",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"react": "catalog:",

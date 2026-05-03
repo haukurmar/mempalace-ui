@@ -28,9 +28,9 @@
 
 ## 4. Composed component layer
 
-- [ ] 4.1 Build `EmptyState`, `LoadingState`, `ErrorState` with stories covering their canonical messaging
-- [ ] 4.2 Build `KeyboardHint` (renders a key combo as styled `<kbd>` chips) with stories
-- [ ] 4.3 Build `WingPill` and `ScopeChip` (small badges showing wing or room scope) with stories
+- [x] 4.1 Build `EmptyState`, `LoadingState`, `ErrorState` with stories covering their canonical messaging
+- [x] 4.2 Build `KeyboardHint` (renders a key combo as styled `<kbd>` chips) with stories
+- [x] 4.3 Build `WingPill` and `ScopeChip` (small badges showing wing or room scope) with stories
 - [ ] 4.4 Build `MetadataTable` (the canonical key-value rendering used everywhere drawer metadata appears) with stories for nested objects and large value counts
 - [ ] 4.5 Build `ProvenanceFooter` (timestamp, source path, mining mode) with stories
 - [ ] 4.6 Build `DrawerCard` (compact card representation used in selection, search results, neighborhood panels) with stories

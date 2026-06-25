@@ -53,7 +53,10 @@
 		},
 		"./tailwind.preset.css": "./dist/tailwind.preset.css"
 	},
-	"files": ["src", "dist"],
+	"files": [
+		"src",
+		"dist"
+	],
 	"scripts": {
 		"build": "tsx scripts/generate-tailwind.ts",
 		"check-types": "tsc --noEmit",
@@ -65,6 +68,7 @@
 		"@memui/biome-config": "workspace:*",
 		"@memui/typescript-config": "workspace:*",
 		"@types/node": "catalog:",
-		"tsx": "4.21.0"
+		"tsx": "4.21.0",
+		"typescript": "catalog:"
 	}
 }

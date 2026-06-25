@@ -1,13 +1,16 @@
 import { ChevronRight } from "lucide-react";
 import {
 	type FC,
+	type FocusEvent,
 	type KeyboardEvent,
 	useCallback,
+	useContext,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
 } from "react";
+import { KeybindRegistryContext, useKeybind, useScope } from "../../keyboard";
 import { cn } from "../../lib/utils";
 
 export type RoomNode = {
@@ -60,7 +63,14 @@ export const RoomTree: FC<RoomTreeProps> = (props) => {
 	const expanded = isControlled ? expandedIds : internalExpanded;
 
 	const [focusedId, setFocusedId] = useState<string | undefined>(() => data.wings[0]?.id);
+	const [isFocused, setIsFocused] = useState(false);
 	const containerRef = useRef<HTMLDivElement | null>(null);
+
+	// The keyboard registry's J/K/Enter grammar layers on top of the always-on
+	// arrow-key roving navigation, but it requires a KeybindRegistryProvider in
+	// the tree. Detect it so the component still renders (with arrows + native
+	// click) when mounted outside a provider.
+	const hasRegistry = useContext(KeybindRegistryContext) !== null;
 
 	const flat = useMemo<FlatNode[]>(() => {
 		const out: FlatNode[] = [];
@@ -103,6 +113,48 @@ export const RoomTree: FC<RoomTreeProps> = (props) => {
 		el?.focus();
 	};
 
+	// Shared next/previous movement used by both the arrow keys (local handler)
+	// and the J/K registry aliases, so they stay in lockstep.
+	const moveFocus = (delta: number) => {
+		if (flat.length === 0) return;
+		if (!focusedId) {
+			focusNode(nodeId(flat[0]));
+			return;
+		}
+		const idx = flat.findIndex((n) => nodeId(n) === focusedId);
+		if (idx === -1) return;
+		const target = flat[idx + delta];
+		if (target) focusNode(nodeId(target));
+	};
+
+	// Enter semantics: activate/open the focused node only. Expand/collapse stays
+	// on the arrow keys (and Space), per the J/K/Enter grammar.
+	const activateFocused = () => {
+		if (!focusedId) return;
+		const node = flat.find((n) => nodeId(n) === focusedId);
+		if (!node) return;
+		if (node.kind === "wing") onSelect?.(node.wing.id, "wing");
+		else onSelect?.(node.room.id, "room");
+	};
+
+	const handleNext = () => {
+		moveFocus(1);
+	};
+
+	const handlePrev = () => {
+		moveFocus(-1);
+	};
+
+	const handleFocus = () => {
+		setIsFocused(true);
+	};
+
+	const handleBlur = (event: FocusEvent<HTMLDivElement>) => {
+		if (!containerRef.current?.contains(event.relatedTarget as Node | null)) {
+			setIsFocused(false);
+		}
+	};
+
 	const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
 		if (!focusedId) return;
 		const idx = flat.findIndex((n) => nodeId(n) === focusedId);
@@ -112,14 +164,12 @@ export const RoomTree: FC<RoomTreeProps> = (props) => {
 		switch (event.key) {
 			case "ArrowDown": {
 				event.preventDefault();
-				const next = flat[idx + 1];
-				if (next) focusNode(nodeId(next));
+				moveFocus(1);
 				break;
 			}
 			case "ArrowUp": {
 				event.preventDefault();
-				const prev = flat[idx - 1];
-				if (prev) focusNode(nodeId(prev));
+				moveFocus(-1);
 				break;
 			}
 			case "ArrowRight": {
@@ -142,11 +192,11 @@ export const RoomTree: FC<RoomTreeProps> = (props) => {
 				}
 				break;
 			}
-			case "Enter":
 			case " ": {
+				// Space toggles expansion on a wing; on a leaf room it activates.
+				// Enter (activate/open) is owned by the registry's "tree" scope.
 				event.preventDefault();
 				if (current.kind === "wing") {
-					onSelect?.(current.wing.id, "wing");
 					if (current.wing.rooms.length > 0) toggle(current.wing.id);
 				} else {
 					onSelect?.(current.room.id, "room");
@@ -177,8 +227,18 @@ export const RoomTree: FC<RoomTreeProps> = (props) => {
 			aria-label="Palace structure"
 			data-density={density}
 			onKeyDown={handleKeyDown}
+			onFocus={handleFocus}
+			onBlur={handleBlur}
 			className={cn("flex flex-col gap-0.5 font-body text-small", className)}
 		>
+			{hasRegistry ? (
+				<RoomTreeKeybinds
+					active={isFocused}
+					onNext={handleNext}
+					onPrev={handlePrev}
+					onActivate={activateFocused}
+				/>
+			) : null}
 			{data.wings.map((wing) => {
 				const isExpanded = expanded.has(wing.id);
 				return (
@@ -200,6 +260,54 @@ export const RoomTree: FC<RoomTreeProps> = (props) => {
 };
 
 const nodeId = (node: FlatNode) => (node.kind === "wing" ? node.wing.id : node.room.id);
+
+type RoomTreeKeybindsProps = {
+	active: boolean;
+	onNext: () => void;
+	onPrev: () => void;
+	onActivate: () => void;
+};
+
+/**
+ * Registers the tree's J/K/Enter grammar with the keyboard registry and pushes
+ * the "tree" scope while the tree is focused. Rendered only when a
+ * KeybindRegistryProvider is present (it relies on registry hooks); it draws
+ * nothing. J aliases ArrowDown, K aliases ArrowUp, and Enter activates the
+ * focused node. Esc is intentionally not bound here so it bubbles to the global
+ * overlay-dismiss layer.
+ */
+const RoomTreeKeybinds: FC<RoomTreeKeybindsProps> = (props) => {
+	const { active, onNext, onPrev, onActivate } = props;
+
+	useScope("tree", active);
+
+	useKeybind({
+		id: "tree.next",
+		keys: "j",
+		label: "Next item",
+		scope: "tree",
+		group: "Navigation",
+		handler: onNext,
+	});
+	useKeybind({
+		id: "tree.prev",
+		keys: "k",
+		label: "Previous item",
+		scope: "tree",
+		group: "Navigation",
+		handler: onPrev,
+	});
+	useKeybind({
+		id: "tree.activate",
+		keys: "Enter",
+		label: "Open focused item",
+		scope: "tree",
+		group: "Navigation",
+		handler: onActivate,
+	});
+
+	return null;
+};
 
 type WingRowProps = {
 	wing: WingNode;

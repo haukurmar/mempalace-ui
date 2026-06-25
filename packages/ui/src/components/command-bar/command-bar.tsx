@@ -1,4 +1,5 @@
 import { type FC, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { cn } from "../../lib/utils";
 import {
 	CommandDialog,
 	CommandEmpty,
@@ -7,7 +8,6 @@ import {
 	CommandItem,
 	CommandList,
 } from "../../primitives/command";
-import { cn } from "../../lib/utils";
 import { KeyboardHint } from "../keyboard-hint";
 
 export type CommandAction = {
@@ -29,6 +29,12 @@ export type CommandBarProps = {
 	recents?: ReadonlyArray<string>;
 	onRecent?: (actionId: string) => void;
 	className?: string;
+	/**
+	 * Forwarded to the underlying dialog's Esc handler. Pass a `preventDefault`
+	 * handler to disable Radix's built-in Esc-to-close when the keybind registry
+	 * owns Esc for the palette.
+	 */
+	onEscapeKeyDown?: (event: KeyboardEvent) => void;
 };
 
 const DEFAULT_GROUP = "Actions";
@@ -57,6 +63,7 @@ export const CommandBar: FC<CommandBarProps> = (props) => {
 		recents,
 		onRecent,
 		className,
+		onEscapeKeyDown,
 	} = props;
 
 	const isControlled = controlledOpen !== undefined;
@@ -131,7 +138,12 @@ export const CommandBar: FC<CommandBarProps> = (props) => {
 	);
 
 	return (
-		<CommandDialog open={open} onOpenChange={setOpen} className={className}>
+		<CommandDialog
+			open={open}
+			onOpenChange={setOpen}
+			className={className}
+			onEscapeKeyDown={onEscapeKeyDown}
+		>
 			<CommandInput placeholder={placeholder} value={query} onValueChange={setQuery} />
 			<CommandList>
 				<CommandEmpty>No results found.</CommandEmpty>

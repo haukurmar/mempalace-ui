@@ -87,11 +87,11 @@
 
 ## 10. Feature: palace search
 
-- [ ] 10.1 Implement the always-available top-bar search input with `Cmd+K` shortcut and history dropdown
-- [ ] 10.2 Wire the search to a `searchSemantic` server function that calls `mempalace_search` via MCP
-- [ ] 10.3 Render results with `ResultRow`, sorted by combined relevance, with click-through to the detail panel
-- [ ] 10.4 Implement the `FilterRuleBuilder` integration on the search page; round-trip filters to/from chromadb `$and`/`$or` JSON
-- [ ] 10.5 Persist per-wing query history in localStorage with a 20-entry cap
+- [x] 10.1 Implement the always-available top-bar search input with `Cmd+K` shortcut and history dropdown
+- [x] 10.2 Wire the search to a `searchSemantic` server function that calls `mempalace_search` via MCP
+- [x] 10.3 Render results with `ResultRow`, sorted by combined relevance, with click-through to the detail panel
+- [x] 10.4 Implement the `FilterRuleBuilder` integration on the search page; round-trip filters to/from chromadb `$and`/`$or` JSON
+- [x] 10.5 Persist per-wing query history in localStorage with a 20-entry cap
 - [ ] 10.6 Playwright tests covering keyboard shortcut, history, filter round-trip, and results rendering
 
 ## 11. Feature: keyboard navigation

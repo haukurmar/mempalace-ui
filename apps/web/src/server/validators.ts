@@ -1,3 +1,4 @@
+import type { WhereClause } from "@memui/palace-types/where";
 import type {
 	FindTunnelsInput,
 	GetDrawerEmbeddingSummaryInput,
@@ -122,6 +123,15 @@ export const validateSearchSemantic = (raw: unknown): SearchSemanticInput => {
 	if (room !== undefined) out.room = room;
 	const maxDistance = optBoundedNumber(raw.maxDistance, "maxDistance", 0, 2);
 	if (maxDistance !== undefined) out.maxDistance = maxDistance;
+	// Shallow check only: the chromadb evaluator (and, eventually, chromadb's
+	// own validator on the wire) handle deep grammar checks. We just need
+	// "is it a non-empty plain object?" to keep the inputValidator honest.
+	if (raw.where !== undefined) {
+		if (!isObject(raw.where)) throw new TypeError("where must be an object");
+		out.where = raw.where as WhereClause;
+	}
+	const overfetchFactor = optBoundedNumber(raw.overfetchFactor, "overfetchFactor", 1, 5);
+	if (overfetchFactor !== undefined) out.overfetchFactor = overfetchFactor;
 	return out;
 };
 

@@ -59,6 +59,8 @@ const makeConnection = (opts: MockOpts = {}): Connection => {
 			getDrawerEmbeddingSummary: vi.fn(
 				async (): Promise<EmbeddingSummaryResult> => opts.embeddingSummary ?? { available: false },
 			),
+			findDrawerIdByLocator: vi.fn(async () => null),
+			getDrawersMetadata: vi.fn(async () => new Map()),
 			dispose: vi.fn(),
 		},
 		mcp: {
@@ -73,6 +75,8 @@ const makeConnection = (opts: MockOpts = {}): Connection => {
 						query: "",
 						filters: {},
 						totalBeforeFilter: 0,
+						totalAfterFilter: 0,
+						candidatesScanned: 0,
 						results: [],
 					},
 			),
@@ -203,21 +207,73 @@ describe("getDrawerEmbeddingSummaryHandler", () => {
 });
 
 describe("searchSemanticHandler", () => {
-	it("forwards search args to mcp client", async () => {
+	it("forwards search args to mcp client and supplies a resolver when sqlite is ready", async () => {
 		const response: SearchResponse = {
 			query: "hello",
 			filters: { wing: "code" },
 			totalBeforeFilter: 1,
+			totalAfterFilter: 1,
+			candidatesScanned: 1,
 			results: [],
 		};
 		const conn = makeConnection({ search: response });
 		const result = await searchSemanticHandler(conn, { query: "hello", limit: 5, wing: "code" });
 		expect(result).toEqual(response);
-		expect(conn.mcp.searchSemantic).toHaveBeenCalledWith({
+		expect(conn.mcp.searchSemantic).toHaveBeenCalledTimes(1);
+		const call = (conn.mcp.searchSemantic as ReturnType<typeof vi.fn>).mock.calls[0]?.[0] as {
+			query: string;
+			limit?: number;
+			wing?: string;
+			resolveDrawerId?: unknown;
+			filterByMetadata?: unknown;
+		};
+		expect(call.query).toBe("hello");
+		expect(call.limit).toBe(5);
+		expect(call.wing).toBe("code");
+		expect(typeof call.resolveDrawerId).toBe("function");
+		expect(typeof call.filterByMetadata).toBe("function");
+	});
+
+	it("forwards locator lookups to sqlite when the resolver fires", async () => {
+		const response: SearchResponse = {
 			query: "hello",
-			limit: 5,
-			wing: "code",
+			filters: {},
+			totalBeforeFilter: 0,
+			totalAfterFilter: 0,
+			candidatesScanned: 0,
+			results: [],
+		};
+		const conn = makeConnection({ search: response });
+		// Capture the resolver passed to the MCP client and exercise it
+		// directly — proves the handler bridges the SQL helper into the
+		// search code path without coupling to mempalace_search internals.
+		(conn.mcp.searchSemantic as ReturnType<typeof vi.fn>).mockImplementationOnce(async (opts) => {
+			const resolver = (opts as { resolveDrawerId?: unknown }).resolveDrawerId as
+				| ((l: { wingId: string; roomId: string; sourceFile: string }) => Promise<string | null>)
+				| undefined;
+			if (resolver) {
+				await resolver({ wingId: "code", roomId: "general", sourceFile: "/tmp/foo.md" });
+			}
+			return response;
 		});
+		(conn.sqlite.findDrawerIdByLocator as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+			"drawer_code_general_abc",
+		);
+		await searchSemanticHandler(conn, { query: "hello" });
+		expect(conn.sqlite.findDrawerIdByLocator).toHaveBeenCalledWith({
+			wingId: "code",
+			roomId: "general",
+			sourceFile: "/tmp/foo.md",
+		});
+	});
+
+	it("omits the resolver when sqlite is offline", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		await searchSemanticHandler(conn, { query: "hello" });
+		const call = (conn.mcp.searchSemantic as ReturnType<typeof vi.fn>).mock.calls[0]?.[0] as {
+			resolveDrawerId?: unknown;
+		};
+		expect(call.resolveDrawerId).toBeUndefined();
 	});
 
 	it("throws McpUnavailableError when MCP is offline", async () => {
@@ -234,6 +290,74 @@ describe("searchSemanticHandler", () => {
 		await expect(searchSemanticHandler(conn, { query: "x" })).rejects.toBeInstanceOf(
 			IncompatibleMcpVersionError,
 		);
+	});
+
+	it("forwards a filterByMetadata hook that delegates to getDrawersMetadata", async () => {
+		const conn = makeConnection();
+		(conn.mcp.searchSemantic as ReturnType<typeof vi.fn>).mockImplementationOnce(async (opts) => {
+			const filterByMetadata = (opts as { filterByMetadata?: unknown }).filterByMetadata as
+				| ((ids: readonly string[]) => Promise<Map<string, unknown>>)
+				| undefined;
+			if (filterByMetadata) await filterByMetadata(["drawer_a"]);
+			return {
+				query: "hello",
+				filters: {},
+				totalBeforeFilter: 0,
+				totalAfterFilter: 0,
+				candidatesScanned: 0,
+				results: [],
+			} as SearchResponse;
+		});
+		await searchSemanticHandler(conn, {
+			query: "hello",
+			where: { wing: { $eq: "code" } },
+		});
+		expect(conn.sqlite.getDrawersMetadata).toHaveBeenCalledWith(["drawer_a"]);
+	});
+
+	it("fails closed (PalaceUnavailableError) when SQLite is offline and a where clause is provided", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		await expect(
+			searchSemanticHandler(conn, {
+				query: "hello",
+				where: { wing: { $eq: "code" } },
+			}),
+		).rejects.toBeInstanceOf(PalaceUnavailableError);
+	});
+
+	it("tags the fail-closed error with code='filters_unavailable' for UI dispatch", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		try {
+			await searchSemanticHandler(conn, {
+				query: "hello",
+				where: { wing: { $eq: "code" } },
+			});
+			expect.fail("expected PalaceUnavailableError");
+		} catch (error) {
+			expect(error).toBeInstanceOf(PalaceUnavailableError);
+			expect((error as PalaceUnavailableError).code).toBe("filters_unavailable");
+			// Round-trip the error through the same JSON shape TanStack Start
+			// uses for server-fn responses to confirm the discriminator
+			// survives the strict serializer.
+			const serialized = JSON.parse(
+				JSON.stringify({
+					name: (error as Error).name,
+					message: (error as Error).message,
+					code: (error as PalaceUnavailableError).code,
+				}),
+			) as { name: string; message: string; code?: string };
+			expect(serialized.name).toBe("PalaceUnavailableError");
+			expect(serialized.code).toBe("filters_unavailable");
+		}
+	});
+
+	it("does not pass filterByMetadata when SQLite is offline and no filter is set", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		await searchSemanticHandler(conn, { query: "hello" });
+		const call = (conn.mcp.searchSemantic as ReturnType<typeof vi.fn>).mock.calls[0]?.[0] as {
+			filterByMetadata?: unknown;
+		};
+		expect(call.filterByMetadata).toBeUndefined();
 	});
 });
 

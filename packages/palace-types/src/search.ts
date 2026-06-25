@@ -44,6 +44,11 @@ export type SearchResult = {
  * `mempalace_search`: the originating query, the scope filters that were
  * applied, the unfiltered candidate count (so the UI can show "X of Y
  * results above the distance threshold"), and the result rows.
+ *
+ * `totalAfterFilter` and `candidatesScanned` carry the post-filter
+ * signal. When no `where` clause is in play they equal
+ * `totalBeforeFilter`; when one is, they let the UI render
+ * "Showing N of M candidates after filtering" without a second round-trip.
  */
 export type SearchResponse = {
 	query: string;
@@ -52,5 +57,7 @@ export type SearchResponse = {
 		room?: string;
 	};
 	totalBeforeFilter: number;
+	totalAfterFilter: number;
+	candidatesScanned: number;
 	results: readonly SearchResult[];
 };

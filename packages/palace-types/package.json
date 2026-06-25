@@ -46,6 +46,10 @@
 		"./search": {
 			"types": "./src/search.ts",
 			"default": "./src/search.ts"
+		},
+		"./where": {
+			"types": "./src/where.ts",
+			"default": "./src/where.ts"
 		}
 	},
 	"files": [

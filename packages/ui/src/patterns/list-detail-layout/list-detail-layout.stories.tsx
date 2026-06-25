@@ -8,6 +8,7 @@ import {
 	type SearchResult,
 	type WingNode,
 } from "@memui/ui/components";
+import { KeybindRegistryProvider } from "@memui/ui/keyboard";
 import { Input } from "@memui/ui/primitives";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Search } from "lucide-react";
@@ -27,9 +28,11 @@ const meta: Meta<typeof ListDetailLayout> = {
 	},
 	decorators: [
 		(Story) => (
-			<div className="h-screen w-full">
-				<Story />
-			</div>
+			<KeybindRegistryProvider>
+				<div className="h-screen w-full">
+					<Story />
+				</div>
+			</KeybindRegistryProvider>
 		),
 	],
 };
@@ -169,7 +172,7 @@ export const WithDetail: Story = {
 		docs: {
 			description: {
 				story:
-					"Detail panel slides in from the right. On large viewports it occupies ~45% of the available width; on smaller viewports it covers the full width with a backdrop overlay click-target for dismissal.",
+					"Detail panel slides in from the right on a Radix Sheet, so it traps focus while open and restores focus to the previously focused element on close. It pushes the `drawer-panel` keyboard scope and registers an `Esc` binding that closes it; clicking the backdrop or the close button dismisses it as well. On large viewports it caps at a comfortable reading width; on smaller viewports it covers the full width.",
 			},
 		},
 	},

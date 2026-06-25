@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { KeybindRegistryProvider } from "../../keyboard";
 import { RoomTree, type RoomTreeData } from "./room-tree";
 
 const meta: Meta<typeof RoomTree> = {
@@ -7,10 +8,14 @@ const meta: Meta<typeof RoomTree> = {
 	component: RoomTree,
 	parameters: { layout: "padded" },
 	decorators: [
+		// Provide the keyboard registry so the J/K/Enter grammar is live in
+		// Storybook (focus the tree, then press J/K to move and Enter to open).
 		(Story) => (
-			<div className="w-72 rounded-md border border-primary-100 bg-background p-2">
-				<Story />
-			</div>
+			<KeybindRegistryProvider>
+				<div className="w-72 rounded-md border border-primary-100 bg-background p-2">
+					<Story />
+				</div>
+			</KeybindRegistryProvider>
 		),
 	],
 };

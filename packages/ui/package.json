@@ -26,6 +26,10 @@
 		"./lib/utils": {
 			"types": "./src/lib/utils.ts",
 			"default": "./src/lib/utils.ts"
+		},
+		"./keyboard": {
+			"types": "./src/keyboard/index.ts",
+			"default": "./src/keyboard/index.ts"
 		}
 	},
 	"files": [
@@ -34,7 +38,8 @@
 	"scripts": {
 		"check-types": "tsc --noEmit",
 		"lint": "biome lint .",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@codemirror/lang-markdown": "catalog:",
@@ -64,6 +69,7 @@
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",
 		"react": "catalog:",
-		"react-dom": "catalog:"
+		"react-dom": "catalog:",
+		"vitest": "catalog:"
 	}
 }

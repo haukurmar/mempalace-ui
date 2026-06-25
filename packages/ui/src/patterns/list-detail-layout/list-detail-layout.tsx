@@ -1,5 +1,7 @@
-import type { FC, ReactNode } from "react";
+import { type FC, type ReactNode, useRef } from "react";
+import { useKeybind, useScope } from "../../keyboard";
 import { cn } from "../../lib/utils";
+import { Sheet, SheetContent, SheetTitle } from "../../primitives";
 
 export type ListDetailLayoutProps = {
 	sidebar: ReactNode;
@@ -24,8 +26,56 @@ export const ListDetailLayout: FC<ListDetailLayoutProps> = (props) => {
 		className,
 	} = props;
 
-	const handleOverlayClick = () => {
+	// Make the drawer-panel scope topmost while the slide-over is open so its Esc
+	// binding shadows lower scopes — this is what gives the registry's
+	// "Esc closes the topmost overlay" grammar the correct winner.
+	useScope("drawer-panel", detailOpen);
+
+	const handleClose = () => {
 		onDetailClose?.();
+	};
+
+	useKeybind({
+		id: "list-detail-layout:close-detail",
+		keys: "Esc",
+		label: "Close detail panel",
+		scope: "drawer-panel",
+		group: "Detail panel",
+		handler: handleClose,
+	});
+
+	// Radix restores focus to the element focused when the panel mounted, which
+	// works even for programmatic (keyboard-list) opens with no DOM trigger. We
+	// also snapshot that element ourselves as a guaranteed restoration target.
+	// The snapshot must be taken during render of THIS component: Radix's focus
+	// trap moves focus in a child layout effect that runs before any effect here,
+	// so by the time an effect in this component fires the original element is
+	// already blurred.
+	const restoreFocusRef = useRef<HTMLElement | null>(null);
+	const wasOpenRef = useRef(detailOpen);
+	if (detailOpen && !wasOpenRef.current) {
+		restoreFocusRef.current =
+			typeof document === "undefined" ? null : (document.activeElement as HTMLElement | null);
+	}
+	wasOpenRef.current = detailOpen;
+
+	const handleOpenChange = (open: boolean) => {
+		if (!open) onDetailClose?.();
+	};
+
+	// Esc is owned by the keybind registry (drawer-panel scope), so neutralize
+	// Radix's built-in Esc-to-close to avoid a double close.
+	const handleEscapeKeyDown = (event: KeyboardEvent) => {
+		event.preventDefault();
+	};
+
+	const handleCloseAutoFocus = (event: Event) => {
+		const target = restoreFocusRef.current;
+		if (target && typeof document !== "undefined" && document.contains(target)) {
+			event.preventDefault();
+			target.focus();
+		}
+		restoreFocusRef.current = null;
 	};
 
 	return (
@@ -35,32 +85,26 @@ export const ListDetailLayout: FC<ListDetailLayoutProps> = (props) => {
 					{header}
 				</div>
 			) : null}
-			<div className="relative flex min-h-0 flex-1">
+			<div className="flex min-h-0 flex-1">
 				<aside
 					className={cn("shrink-0 overflow-y-auto border-r border-secondary-200", sidebarWidth)}
 				>
 					{sidebar}
 				</aside>
 				<main className="min-w-0 flex-1 overflow-y-auto">{main}</main>
-				{detailOpen ? (
-					<button
-						type="button"
-						aria-label="Close detail panel"
-						onClick={handleOverlayClick}
-						className="absolute inset-0 z-10 cursor-default bg-black/20 lg:hidden"
-					/>
-				) : null}
-				<aside
-					data-state={detailOpen ? "open" : "closed"}
-					aria-hidden={!detailOpen}
-					className={cn(
-						"absolute inset-y-0 right-0 z-20 flex w-full max-w-[480px] flex-col overflow-y-auto border-l border-secondary-200 bg-background shadow-lg transition-transform duration-300 ease-in-out lg:w-[45%]",
-						detailOpen ? "translate-x-0" : "translate-x-full",
-					)}
-				>
-					{detail}
-				</aside>
 			</div>
+			<Sheet open={detailOpen} onOpenChange={handleOpenChange}>
+				<SheetContent
+					side="right"
+					aria-describedby={undefined}
+					onEscapeKeyDown={handleEscapeKeyDown}
+					onCloseAutoFocus={handleCloseAutoFocus}
+					className="w-full gap-0 overflow-y-auto border-secondary-200 p-0 sm:max-w-lg"
+				>
+					<SheetTitle className="sr-only">Detail panel</SheetTitle>
+					{detail}
+				</SheetContent>
+			</Sheet>
 		</div>
 	);
 };

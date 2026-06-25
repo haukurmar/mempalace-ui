@@ -63,6 +63,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
 		"@memui/biome-config": "workspace:*",
-		"@memui/typescript-config": "workspace:*"
+		"@memui/typescript-config": "workspace:*",
+		"typescript": "catalog:"
 	}
 }

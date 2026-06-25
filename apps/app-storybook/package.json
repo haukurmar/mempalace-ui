@@ -28,6 +28,7 @@
 		"react-dom": "catalog:",
 		"storybook": "10.3.6",
 		"tailwindcss": "catalog:",
+		"typescript": "catalog:",
 		"vite": "catalog:"
 	}
 }

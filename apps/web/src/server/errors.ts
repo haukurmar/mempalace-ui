@@ -13,9 +13,19 @@ export class IncompatibleMcpVersionError extends Error {
 }
 
 export class PalaceUnavailableError extends Error {
-	constructor(message: string) {
+	/**
+	 * Optional discriminator code. The route layer reads this to render
+	 * targeted UI states (e.g. `"filters_unavailable"` → the
+	 * "metadata filters require SQLite" panel). Public string so it
+	 * round-trips through TanStack Start's strict server-fn serializer
+	 * without needing a custom `toJSON`.
+	 */
+	readonly code?: string;
+
+	constructor(message: string, code?: string) {
 		super(message);
 		this.name = "PalaceUnavailableError";
+		if (code !== undefined) this.code = code;
 	}
 }
 

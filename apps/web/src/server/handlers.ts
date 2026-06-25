@@ -7,8 +7,9 @@ import type { Drawer, DrawerSummary } from "@memui/palace-types/drawer";
 import type { Room } from "@memui/palace-types/room";
 import type { SearchResponse } from "@memui/palace-types/search";
 import type { Tunnel } from "@memui/palace-types/tunnel";
+import type { WhereClause } from "@memui/palace-types/where";
 import type { Wing } from "@memui/palace-types/wing";
-import { assertMcpReady, assertSqliteReady } from "./errors";
+import { assertMcpReady, assertSqliteReady, PalaceUnavailableError } from "./errors";
 
 export type SqliteStatusPayload =
 	| { status: "ok" }
@@ -165,6 +166,8 @@ export type SearchSemanticInput = {
 	wing?: string;
 	room?: string;
 	maxDistance?: number;
+	where?: WhereClause;
+	overfetchFactor?: number;
 };
 
 export const searchSemanticHandler = async (
@@ -172,7 +175,36 @@ export const searchSemanticHandler = async (
 	input: SearchSemanticInput,
 ): Promise<SearchResponse> => {
 	assertMcpReady(conn);
-	return conn.mcp.searchSemantic(input);
+	// `mempalace_search` does not return drawer ids — recover them from
+	// SQLite via (wing, room, source_file). Skip when SQLite is offline:
+	// the search result still renders, click-through stays disabled.
+	const sqliteOk = conn.status.sqlite.status === "ok";
+
+	// Fail-closed: the user supplied a filter but SQLite is offline so we cannot
+	// evaluate it. Returning unfiltered results would silently lie. Surface the
+	// degraded state via the standard error-projection envelope so the UI can
+	// render an explicit "filters unavailable" message.
+	if (input.where !== undefined && !sqliteOk) {
+		throw new PalaceUnavailableError(
+			"Metadata filters require the local palace SQLite, which is offline.",
+			"filters_unavailable",
+		);
+	}
+
+	const resolveDrawerId = sqliteOk
+		? async (locator: { wingId: string; roomId: string; sourceFile: string }) =>
+				conn.sqlite.findDrawerIdByLocator(locator)
+		: undefined;
+	const filterByMetadata = sqliteOk
+		? (ids: readonly string[]) => conn.sqlite.getDrawersMetadata(ids)
+		: undefined;
+
+	const opts = {
+		...input,
+		...(resolveDrawerId !== undefined ? { resolveDrawerId } : {}),
+		...(filterByMetadata !== undefined ? { filterByMetadata } : {}),
+	};
+	return conn.mcp.searchSemantic(opts);
 };
 
 export type FindTunnelsInput = { wingA?: string; wingB?: string };

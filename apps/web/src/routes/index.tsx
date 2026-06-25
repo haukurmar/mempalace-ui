@@ -1,4 +1,4 @@
-import { CommandBar, EmptyState, type CommandAction } from "@memui/ui/components";
+import { type CommandAction, CommandBar, EmptyState } from "@memui/ui/components";
 import { Button, toast } from "@memui/ui/primitives";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -16,6 +16,18 @@ const HomePage: FC = () => {
 
 	const actions = useMemo<CommandAction[]>(
 		() => [
+			{
+				id: "search",
+				label: "Search palace",
+				description: "Semantic search across every wing",
+				group: "Navigate",
+				keywords: ["search", "find", "query", "semantic"],
+				shortcut: ["g", "s"],
+				run: () => {
+					setOpen(false);
+					void navigate({ to: "/search" });
+				},
+			},
 			{
 				id: "browse",
 				label: "Open browse",

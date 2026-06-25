@@ -4,10 +4,19 @@ import type { Provenance } from "@memui/palace-types/provenance";
 import type { Room } from "@memui/palace-types/room";
 import type { SearchResponse, SearchResult } from "@memui/palace-types/search";
 import type { Tunnel } from "@memui/palace-types/tunnel";
+import type { WhereClause } from "@memui/palace-types/where";
 import type { Wing } from "@memui/palace-types/wing";
 import { coerceMiningMode } from "../sqlite-client/eav";
+import { mcpSupportsWhere } from "../util/capabilities";
+import { evaluateWhere } from "../where/evaluate";
 import { parseToolResult } from "./envelope";
 import type { McpTransport } from "./transport";
+
+export type DrawerIdResolver = (locator: {
+	wingId: string;
+	roomId: string;
+	sourceFile: string;
+}) => Promise<string | null>;
 
 export type SearchSemanticOpts = {
 	query: string;
@@ -22,6 +31,33 @@ export type SearchSemanticOpts = {
 	 * Pass it through anyway; harmless if the server ignores it.
 	 */
 	context?: string;
+	/**
+	 * Optional resolver invoked once per result row to recover the
+	 * `drawerId` from the `(wing, room, source_file)` locator.
+	 * `mempalace_search` does not include drawer ids in its response, so
+	 * the search handler passes a SQLite-backed resolver here. A row
+	 * whose resolver returns `null` keeps `drawerId` undefined.
+	 */
+	resolveDrawerId?: DrawerIdResolver;
+	/**
+	 * chromadb-shaped `where` clause. When set, the wrapper either
+	 * forwards it upstream (capability gate) or post-filters the result
+	 * list locally. See the banner comment on `searchSemantic`.
+	 */
+	where?: WhereClause;
+	/**
+	 * Hook injected by the handler when SQLite is ready. Resolves a
+	 * candidate batch's metadata so the post-filter step can evaluate
+	 * the where-clause. Omitted when SQLite is offline — the handler
+	 * fails closed (returns an error) in that case rather than letting
+	 * `searchSemantic` silently drop the filter.
+	 */
+	filterByMetadata?: (drawerIds: readonly string[]) => Promise<Map<string, MetadataRecord>>;
+	/**
+	 * Default 3, capped at 5. We over-fetch when a filter is active so
+	 * the user doesn't see sparse pages caused by client-side filtering.
+	 */
+	overfetchFactor?: number;
 };
 
 export type FindTunnelsOpts = {
@@ -159,31 +195,36 @@ type RawSearchResponse = {
 	results?: readonly RawSearchResult[];
 };
 
+const searchResultFromRaw = (r: RawSearchResult): SearchResult => {
+	const drawerId = r.drawer_id ?? r.id;
+	const result: SearchResult = {
+		snippet: r.text ?? "",
+		wing: { id: r.wing ?? "", name: r.wing ?? "" },
+		room: { id: r.room ?? "", name: r.room ?? "" },
+		scores: {
+			cosine: r.similarity,
+			bm25: r.bm25_score,
+			distance: r.distance,
+			effectiveDistance: r.effective_distance,
+			closetBoost: r.closet_boost,
+		},
+		createdAt: r.created_at,
+		updatedAt: r.updated_at,
+		matchedVia: r.matched_via,
+	};
+	if (drawerId !== undefined) result.drawerId = drawerId;
+	return result;
+};
+
 const searchResponseFromRaw = (raw: RawSearchResponse): SearchResponse => {
-	const results: SearchResult[] = (raw.results ?? []).map((r) => {
-		const drawerId = r.drawer_id ?? r.id;
-		const result: SearchResult = {
-			snippet: r.text ?? "",
-			wing: { id: r.wing ?? "", name: r.wing ?? "" },
-			room: { id: r.room ?? "", name: r.room ?? "" },
-			scores: {
-				cosine: r.similarity,
-				bm25: r.bm25_score,
-				distance: r.distance,
-				effectiveDistance: r.effective_distance,
-				closetBoost: r.closet_boost,
-			},
-			createdAt: r.created_at,
-			updatedAt: r.updated_at,
-			matchedVia: r.matched_via,
-		};
-		if (drawerId !== undefined) result.drawerId = drawerId;
-		return result;
-	});
+	const results: SearchResult[] = (raw.results ?? []).map(searchResultFromRaw);
+	const total = raw.total_before_filter ?? results.length;
 	return {
 		query: raw.query,
 		filters: raw.filters ?? {},
-		totalBeforeFilter: raw.total_before_filter ?? results.length,
+		totalBeforeFilter: total,
+		totalAfterFilter: total,
+		candidatesScanned: total,
 		results,
 	};
 };
@@ -211,18 +252,109 @@ const tunnelFromRaw = (raw: RawTunnel): Tunnel => ({
 	createdAt: raw.created_at ?? "",
 });
 
+// IMPORTANT: this wrapper transparently filters search results when the user
+// supplies a `where` clause, even though MemPalace's MCP `mempalace_search`
+// tool does not accept `where` (as of v3.3.4). We over-fetch by `overfetchFactor`
+// and apply the filter client-side via `filterByMetadata` + `evaluateWhere`.
+//
+// FUTURE: when MemPalace exposes `where` on `mempalace_search`, flip
+// `mcpSupportsWhere()` to gate on the supporting version. The branch below
+// already short-circuits to upstream filtering when the capability check is
+// true. The post-filter path stays as a fallback for users on older MemPalace
+// installs.
 export const searchSemantic = async (
 	transport: McpTransport,
 	opts: SearchSemanticOpts,
 ): Promise<SearchResponse> => {
+	const where = opts.where;
+	const requestedLimit = opts.limit ?? 25;
+	// Validator clamps overfetchFactor to [1, 5], so an inflated value
+	// can never exceed `requestedLimit * 5`. No further capping needed.
+	const overfetchFactor = opts.overfetchFactor ?? 3;
+	const useUpstreamWhere =
+		where !== undefined && mcpSupportsWhere((await transport.getServerInfo()).version);
+
+	let effectiveLimit = requestedLimit;
+	if (where && !useUpstreamWhere) {
+		effectiveLimit = requestedLimit * overfetchFactor;
+	}
+
 	const args: Record<string, unknown> = { query: opts.query };
-	if (opts.limit !== undefined) args.limit = opts.limit;
+	args.limit = effectiveLimit;
 	if (opts.wing !== undefined) args.wing = opts.wing;
 	if (opts.room !== undefined) args.room = opts.room;
 	if (opts.maxDistance !== undefined) args.max_distance = opts.maxDistance;
 	if (opts.context !== undefined) args.context = opts.context;
+	if (useUpstreamWhere && where) args.where = where;
+
 	const raw = await callTool<RawSearchResponse>(transport, "mempalace_search", args);
-	return searchResponseFromRaw(raw);
+	const response = searchResponseFromRaw(raw);
+
+	// Step 1: enrich every row with its drawerId via the resolver.
+	const resolver = opts.resolveDrawerId;
+	const rawRows = raw.results ?? [];
+	const enriched: SearchResult[] = resolver
+		? await Promise.all(
+				response.results.map(async (result, index) => {
+					if (result.drawerId !== undefined) return result;
+					const rawRow = rawRows[index];
+					const wingId = rawRow?.wing ?? "";
+					const roomId = rawRow?.room ?? "";
+					const sourceFile = rawRow?.source_file ?? "";
+					if (wingId === "" || roomId === "" || sourceFile === "") return result;
+					try {
+						const drawerId = await resolver({ wingId, roomId, sourceFile });
+						if (drawerId === null) return result;
+						return { ...result, drawerId };
+					} catch {
+						return result;
+					}
+				}),
+			)
+		: [...response.results];
+
+	// Step 2: post-filter (only when we couldn't push `where` upstream).
+	if (where && !useUpstreamWhere) {
+		const filterByMetadata = opts.filterByMetadata;
+		if (!filterByMetadata) {
+			// The handler always passes `filterByMetadata` when SQLite is
+			// ready; missing here means SQLite is offline. Fail closed —
+			// returning unfiltered rows would silently lie to a user who
+			// explicitly filtered.
+			throw new Error(
+				"searchSemantic: filter required but no metadata hook supplied (SQLite offline?)",
+			);
+		}
+		// Drop rows whose drawerId could not be resolved when a filter is
+		// active — without an id we cannot look up metadata, and a missing
+		// metadata record can't satisfy any operator except `$ne` / `$nin`
+		// against fields the row never had. Treating them as a global "no
+		// match" is the only safe choice.
+		const candidateIds = enriched
+			.map((r) => r.drawerId)
+			.filter((id): id is string => id !== undefined);
+		const metadata = await filterByMetadata(candidateIds);
+
+		const filtered: SearchResult[] = [];
+		for (const result of enriched) {
+			if (result.drawerId === undefined) continue;
+			const record = metadata.get(result.drawerId);
+			if (!record) continue;
+			if (evaluateWhere(where, record)) filtered.push(result);
+		}
+		const sliced = filtered.slice(0, requestedLimit);
+		return {
+			...response,
+			results: sliced,
+			candidatesScanned: enriched.length,
+			totalAfterFilter: filtered.length,
+		};
+	}
+
+	return {
+		...response,
+		results: enriched,
+	};
 };
 
 export const findTunnels = async (

@@ -129,6 +129,8 @@ const stubSqliteClient = (err: Error): SqliteClient => {
 		listWings: reject,
 		listRooms: reject,
 		getDrawerEmbeddingSummary: reject,
+		findDrawerIdByLocator: reject,
+		getDrawersMetadata: reject,
 		dispose: () => {},
 	};
 };

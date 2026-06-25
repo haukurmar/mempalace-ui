@@ -47,11 +47,12 @@ export const createMcpClient = (opts: CreateMcpClientOpts = {}): McpClient => {
 	};
 };
 
-export { IncompatibleMcpError, McpUnavailableError } from "./transport";
-export type { McpServerInfo, McpTransportOpts } from "./transport";
 export type {
+	DrawerIdResolver,
 	FindTunnelsOpts,
 	ListRoomsToolOpts,
 	McpStatus,
 	SearchSemanticOpts,
 } from "./tools";
+export type { McpServerInfo, McpTransportOpts } from "./transport";
+export { IncompatibleMcpError, McpUnavailableError } from "./transport";

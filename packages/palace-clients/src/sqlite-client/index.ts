@@ -1,20 +1,24 @@
 import type { Drawer, DrawerSummary } from "@memui/palace-types/drawer";
+import type { MetadataRecord } from "@memui/palace-types/metadata";
 import type { Room } from "@memui/palace-types/room";
 import type { Wing } from "@memui/palace-types/wing";
 import type { Logger } from "../logger";
 import { createSqliteConnection } from "./connection";
 import {
+	type FindDrawerIdByLocatorOpts,
+	findDrawerIdByLocator,
 	getDrawer,
-	listDrawersByRoom,
 	type ListDrawerSummariesByRoomOpts,
-	listDrawerSummariesByRoom,
 	type ListDrawerSummariesByWingOpts,
-	listDrawerSummariesByWing,
 	type ListDrawersByRoomOpts,
+	listDrawerSummariesByRoom,
+	listDrawerSummariesByWing,
+	listDrawersByRoom,
 } from "./drawers";
 import { type EmbeddingSummaryResult, getDrawerEmbeddingSummary } from "./embeddings";
+import { getDrawersMetadata } from "./metadata";
 import { getStatus, type SqliteStatus } from "./status";
-import { listRooms, type ListRoomsOpts, listWings } from "./wings";
+import { type ListRoomsOpts, listRooms, listWings } from "./wings";
 
 export type SqliteClient = {
 	getStatus: () => Promise<SqliteStatus>;
@@ -25,6 +29,8 @@ export type SqliteClient = {
 	listWings: () => Promise<Wing[]>;
 	listRooms: (opts?: ListRoomsOpts) => Promise<Room[]>;
 	getDrawerEmbeddingSummary: (id: string) => Promise<EmbeddingSummaryResult>;
+	findDrawerIdByLocator: (opts: FindDrawerIdByLocatorOpts) => Promise<string | null>;
+	getDrawersMetadata: (embeddingIds: readonly string[]) => Promise<Map<string, MetadataRecord>>;
 	dispose: () => void;
 };
 
@@ -45,13 +51,16 @@ export const createSqliteClient = (opts: CreateSqliteClientOpts): SqliteClient =
 		listWings: () => listWings(conn),
 		listRooms: (o) => listRooms(conn, o),
 		getDrawerEmbeddingSummary: (id) => getDrawerEmbeddingSummary(conn, id),
+		findDrawerIdByLocator: (o) => findDrawerIdByLocator(conn, o),
+		getDrawersMetadata: (ids) => getDrawersMetadata(conn, ids),
 		dispose: conn.dispose,
 	};
 };
 
-export { IncompatiblePalaceError } from "./connection";
 export type { IncompatiblePalaceInfo } from "./connection";
+export { IncompatiblePalaceError } from "./connection";
 export type {
+	FindDrawerIdByLocatorOpts,
 	ListDrawerSummariesByRoomOpts,
 	ListDrawerSummariesByWingOpts,
 	ListDrawersByRoomOpts,

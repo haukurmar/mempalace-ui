@@ -30,7 +30,8 @@
 	"scripts": {
 		"check-types": "tsc --noEmit",
 		"lint": "biome lint .",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@memui/palace-types": "workspace:*",
@@ -42,6 +43,7 @@
 		"@memui/biome-config": "workspace:*",
 		"@memui/typescript-config": "workspace:*",
 		"@types/better-sqlite3": "catalog:",
-		"@types/node": "catalog:"
+		"@types/node": "catalog:",
+		"vitest": "catalog:"
 	}
 }

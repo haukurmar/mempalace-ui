@@ -230,6 +230,54 @@ export const listDrawerSummariesByRoom = async (
 	return summaries;
 };
 
+export type FindDrawerIdByLocatorOpts = {
+	wingId: string;
+	roomId: string;
+	sourceFile: string;
+};
+
+/**
+ * Recover a public drawer id (the `embedding_id`, e.g.
+ * `drawer_<wing>_<room>_<24hex>`) from a `(wing, room, source_file)`
+ * locator. `mempalace_search` does not return drawer ids in its result
+ * shape, so the search handler enriches its rows by calling this helper.
+ *
+ * When a single source file produced multiple chunks, returns the first
+ * by `chunk_index ASC` (falling back to `created_at ASC, e.id ASC` when
+ * `chunk_index` is missing). Returns `null` when no row matches.
+ */
+export const findDrawerIdByLocator = async (
+	conn: SqliteConnection,
+	opts: FindDrawerIdByLocatorOpts,
+): Promise<string | null> => {
+	const segIds = drawerSegmentIds(conn);
+	if (segIds.length === 0) return null;
+
+	const sql = `SELECT e.embedding_id AS embedding_id,
+	                    em_chunk.int_value AS chunk_index,
+	                    e.created_at AS created_at,
+	                    e.id AS id
+	             FROM embedding_metadata em_w
+	             JOIN embedding_metadata em_r ON em_r.id = em_w.id
+	             JOIN embedding_metadata em_s ON em_s.id = em_w.id
+	             JOIN embeddings e ON e.id = em_w.id
+	             LEFT JOIN embedding_metadata em_chunk
+	               ON em_chunk.id = em_w.id AND em_chunk.key = 'chunk_index'
+	             WHERE em_w.key = 'wing' AND em_w.string_value = ?
+	               AND em_r.key = 'room' AND em_r.string_value = ?
+	               AND em_s.key = 'source_file' AND em_s.string_value = ?
+	               AND e.segment_id IN (${placeholders(segIds.length)})
+	             ORDER BY (em_chunk.int_value IS NULL) ASC,
+	                      em_chunk.int_value ASC,
+	                      e.created_at ASC,
+	                      e.id ASC
+	             LIMIT 1`;
+
+	const params: (string | number)[] = [opts.wingId, opts.roomId, opts.sourceFile, ...segIds];
+	const row = conn.db.prepare(sql).get(...params) as { embedding_id: string } | undefined;
+	return row?.embedding_id ?? null;
+};
+
 /**
  * Wing-scoped variant of `listDrawerSummariesByRoom` — lists every
  * drawer under a wing across all its rooms, ordered by recency.

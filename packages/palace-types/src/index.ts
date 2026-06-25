@@ -6,4 +6,12 @@ export type { MiningMode, Provenance } from "./provenance";
 export type { Room, RoomSummary } from "./room";
 export type { SearchResponse, SearchResult, SearchScores } from "./search";
 export type { Tunnel } from "./tunnel";
+export type {
+	LiteralValue,
+	LogicalOperator,
+	Operator,
+	Rule,
+	RuleGroup,
+	WhereClause,
+} from "./where";
 export type { Wing, WingSummary } from "./wing";

@@ -1,8 +1,7 @@
+import type { FieldDefinition, Group } from "@memui/ui/components";
+import { FilterRuleBuilder, toWhereClause } from "@memui/ui/components";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { FilterRuleBuilder } from "@memui/ui/components";
-import type { FieldDefinition, Group } from "@memui/ui/components";
-import { toWhereClause } from "@memui/ui/components";
 
 const fields: FieldDefinition[] = [
 	{ name: "wingId", label: "Wing", type: "string" },
@@ -61,8 +60,8 @@ export const AndGroup: Story = {
 			op: "$and",
 			children: [
 				{ id: "r1", field: "wingId", operator: "$eq", value: "mempalace-ui" },
-				{ id: "r2", field: "roomId", operator: "$contains", value: "design" },
-				{ id: "r3", field: "tags", operator: "$startsWith", value: "ux-" },
+				{ id: "r2", field: "roomId", operator: "$in", value: ["design", "decision"] },
+				{ id: "r3", field: "tags", operator: "$ne", value: "archived" },
 			],
 		},
 	},

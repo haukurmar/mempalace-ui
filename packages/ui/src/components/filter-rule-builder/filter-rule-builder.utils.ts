@@ -15,15 +15,13 @@ export const createId = (prefix: string): string => {
 	return `${prefix}-${Date.now().toString(36)}-${idCounter}`;
 };
 
-export const STRING_OPERATORS: Operator[] = [
-	"$eq",
-	"$ne",
-	"$contains",
-	"$startsWith",
-	"$endsWith",
-	"$in",
-	"$nin",
-];
+// Operators are constrained to chromadb 1.5.8's `where` grammar so the AST
+// can travel verbatim onto the wire when MemPalace adds native `where`
+// support. Do NOT add client-only operators here — they would silently break
+// when upstream lands. The local SQLite segment does not implement
+// $contains / $startsWith / $endsWith / $not for metadata, so they are
+// deliberately absent from every operator menu below.
+export const STRING_OPERATORS: Operator[] = ["$eq", "$ne", "$in", "$nin"];
 
 export const NUMERIC_OPERATORS: Operator[] = [
 	"$eq",
@@ -57,9 +55,6 @@ export const OPERATOR_LABELS: Record<Operator, string> = {
 	$gte: "greater or equal",
 	$lt: "less than",
 	$lte: "less or equal",
-	$contains: "contains",
-	$startsWith: "starts with",
-	$endsWith: "ends with",
 	$in: "in",
 	$nin: "not in",
 };
@@ -125,7 +120,7 @@ export const toWhereClause = (group: Group): WhereClause | null => {
 	}
 	if (childClauses.length === 0) return null;
 	if (childClauses.length === 1) return childClauses[0];
-	return { [group.op]: childClauses } as WhereClause;
+	return { [group.op]: childClauses } as unknown as WhereClause;
 };
 
 const isLogicalKey = (key: string): key is GroupOperator => key === "$and" || key === "$or";
@@ -140,21 +135,38 @@ const parseClause = (where: WhereClause): Rule | Group => {
 	const keys = Object.keys(where);
 	if (keys.length === 1 && isLogicalKey(keys[0])) {
 		const op = keys[0] as GroupOperator;
-		const arr = (where as { [k in GroupOperator]: WhereClause[] })[op];
-		return {
-			id: createId("grp"),
-			op,
-			children: arr.map(parseClause),
-		};
+		const arr = (where as unknown as { [k in GroupOperator]: readonly WhereClause[] })[op];
+		// A malformed paste like `{ $and: {...} }` passes the logical-key
+		// check but carries a non-array value. Fall through to field-clause
+		// handling rather than throwing on `.map`.
+		if (Array.isArray(arr)) {
+			return {
+				id: createId("grp"),
+				op,
+				children: arr.map(parseClause),
+			};
+		}
 	}
 	const field = keys[0];
-	const opMap = (where as Record<string, Record<string, unknown>>)[field];
-	const operator = Object.keys(opMap)[0] as Operator;
-	const value = opMap[operator] as RuleValue;
+	const opMap = (where as Record<string, unknown>)[field];
+	// Bare-scalar sugar: `{ field: scalar }` is shorthand for
+	// `{ field: { $eq: scalar } }`. Only treat `opMap` as an operator object
+	// when it's a non-null object; otherwise synthesize an `$eq`.
+	if (opMap !== null && typeof opMap === "object") {
+		const operatorMap = opMap as Record<string, unknown>;
+		const operator = Object.keys(operatorMap)[0] as Operator;
+		const value = operatorMap[operator] as RuleValue;
+		return {
+			id: createId("rule"),
+			field,
+			operator,
+			value,
+		};
+	}
 	return {
 		id: createId("rule"),
 		field,
-		operator,
-		value,
+		operator: "$eq",
+		value: opMap as RuleValue,
 	};
 };

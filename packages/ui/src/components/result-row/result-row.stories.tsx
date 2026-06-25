@@ -81,6 +81,19 @@ export const WithHighlight: Story = {
 	},
 };
 
+export const Disabled: Story = {
+	args: {
+		result: {
+			drawerId: "",
+			snippet: "Drawer id could not be resolved — this row is inert.",
+			wing,
+			room,
+			scores: { cosine: 0.55, bm25: 0.9 },
+		},
+		disabled: true,
+	},
+};
+
 export const LongSnippet: Story = {
 	args: {
 		result: {

@@ -16,6 +16,19 @@ export type ResultRowProps = {
 	onClick?: () => void;
 	selected?: boolean;
 	className?: string;
+	/**
+	 * When true, the row is rendered visually muted, removed from the tab
+	 * order, and announced as disabled to assistive tech. Use this for
+	 * results whose drawer id could not be resolved — click-through is
+	 * unavailable, so the row stays inert.
+	 */
+	disabled?: boolean;
+	/**
+	 * Optional explanation surfaced via `title` and an `sr-only` span when
+	 * the row is disabled. Defaults to a generic "click-through unavailable"
+	 * message.
+	 */
+	disabledReason?: string;
 };
 
 const renderHighlightedSnippet = (snippet: string): ReactNode[] => {
@@ -41,10 +54,18 @@ const renderHighlightedSnippet = (snippet: string): ReactNode[] => {
 const formatScore = (value: number, digits: number) => value.toFixed(digits);
 
 export const ResultRow: FC<ResultRowProps> = (props) => {
-	const { result, onClick, selected = false, className } = props;
+	const {
+		result,
+		onClick,
+		selected = false,
+		className,
+		disabled = false,
+		disabledReason = "Click-through unavailable — drawer id could not be resolved.",
+	} = props;
 	const { wing, room, snippet, scores } = result;
 
 	const handleClick = () => {
+		if (disabled) return;
 		onClick?.();
 	};
 
@@ -55,12 +76,17 @@ export const ResultRow: FC<ResultRowProps> = (props) => {
 			type="button"
 			data-slot="result-row"
 			data-selected={selected}
+			data-disabled={disabled}
 			onClick={handleClick}
 			aria-pressed={selected}
+			aria-disabled={disabled || undefined}
+			tabIndex={disabled ? -1 : undefined}
+			title={disabled ? disabledReason : undefined}
 			className={cn(
 				"group flex w-full items-center gap-3 rounded-md border-l-2 px-3 py-2 text-left transition-colors",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
 				selected ? "border-primary-500 bg-primary-50" : "border-transparent hover:bg-secondary-50",
+				disabled ? "cursor-not-allowed opacity-60 hover:bg-transparent" : "",
 				className,
 			)}
 		>
@@ -86,6 +112,7 @@ export const ResultRow: FC<ResultRowProps> = (props) => {
 				) : null}
 				{typeof scores.bm25 === "number" ? <span>bm25={formatScore(scores.bm25, 2)}</span> : null}
 			</div>
+			{disabled ? <span className="sr-only">{disabledReason}</span> : null}
 		</button>
 	);
 };

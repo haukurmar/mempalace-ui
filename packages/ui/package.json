@@ -38,6 +38,7 @@
 	},
 	"dependencies": {
 		"@codemirror/lang-markdown": "catalog:",
+		"@memui/palace-types": "workspace:*",
 		"@uiw/react-codemirror": "catalog:",
 		"class-variance-authority": "catalog:",
 		"clsx": "catalog:",

@@ -96,11 +96,11 @@
 
 ## 11. Feature: keyboard navigation
 
-- [ ] 11.1 Build the `useKeybind({ keys, label, scope, handler })` hook and the registry context
-- [ ] 11.2 Implement scope-aware dispatch (global vs panel-scoped vs editor-scoped)
-- [ ] 11.3 Wire `CommandBar` to consume the registry as its action source
-- [ ] 11.4 Implement the `?` cheatsheet that auto-renders from the registry
-- [ ] 11.5 Apply J/K/Enter/Esc grammar to `RoomTree`, browse table, and search results
+- [x] 11.1 Build the `useKeybind({ keys, label, scope, handler })` hook and the registry context
+- [x] 11.2 Implement scope-aware dispatch (global vs panel-scoped vs editor-scoped)
+- [x] 11.3 Wire `CommandBar` to consume the registry as its action source
+- [x] 11.4 Implement the `?` cheatsheet that auto-renders from the registry
+- [x] 11.5 Apply J/K/Enter/Esc grammar to `RoomTree`, browse table, and search results
 - [ ] 11.6 Add Playwright tests verifying every binding declared in the registry actually fires
 
 ## 12. Feature: palace graph view

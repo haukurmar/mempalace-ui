@@ -96,6 +96,63 @@ describe("findDrawerIdByLocator", () => {
 		expect(result).toBe("drawer_code_general_aaa");
 	});
 
+	it("resolves a basename locator against a stored full path", async () => {
+		// `mempalace_search` reports `source_file` as a bare basename, but
+		// SQLite stores the full absolute path. The locator must still match.
+		seedDrawer(conn, {
+			id: 1,
+			embeddingId: "drawer_sessions_technical_aaa",
+			createdAt: "2026-01-01T00:00:00Z",
+			wing: "sessions",
+			room: "technical",
+			sourceFile: "/Users/me/.claude/projects/x/tool-results/bqhncg1rr.txt",
+		});
+		const result = await findDrawerIdByLocator(conn, {
+			wingId: "sessions",
+			roomId: "technical",
+			sourceFile: "bqhncg1rr.txt",
+		});
+		expect(result).toBe("drawer_sessions_technical_aaa");
+	});
+
+	it("does not match a basename that is only a partial filename suffix", async () => {
+		// A leading-slash anchor in the suffix pattern prevents `foo.md`
+		// from matching a stored path ending in `barfoo.md`.
+		seedDrawer(conn, {
+			id: 1,
+			embeddingId: "drawer_code_general_partial",
+			createdAt: "2026-01-01T00:00:00Z",
+			wing: "code",
+			room: "general",
+			sourceFile: "/tmp/barfoo.md",
+		});
+		const result = await findDrawerIdByLocator(conn, {
+			wingId: "code",
+			roomId: "general",
+			sourceFile: "foo.md",
+		});
+		expect(result).toBeNull();
+	});
+
+	it("matches a basename containing a LIKE wildcard literally", async () => {
+		// `_` is a LIKE wildcard; the helper escapes it so `a_b.md` does not
+		// also match `axb.md`.
+		seedDrawer(conn, {
+			id: 1,
+			embeddingId: "drawer_code_general_literal",
+			createdAt: "2026-01-01T00:00:00Z",
+			wing: "code",
+			room: "general",
+			sourceFile: "/tmp/axb.md",
+		});
+		const result = await findDrawerIdByLocator(conn, {
+			wingId: "code",
+			roomId: "general",
+			sourceFile: "a_b.md",
+		});
+		expect(result).toBeNull();
+	});
+
 	it("returns null when no drawer matches", async () => {
 		seedDrawer(conn, {
 			id: 1,

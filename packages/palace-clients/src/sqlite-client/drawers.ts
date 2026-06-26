@@ -236,11 +236,33 @@ export type FindDrawerIdByLocatorOpts = {
 	sourceFile: string;
 };
 
+// Escape the LIKE wildcards (`%`, `_`) and the escape char itself so a
+// basename that legitimately contains them (e.g. `knowledge_graph.jsonl`)
+// is matched literally rather than as a pattern.
+const LIKE_SPECIAL = /[\\%_]/g;
+const escapeLike = (value: string): string => value.replace(LIKE_SPECIAL, (ch) => `\\${ch}`);
+
+// Last path segment of a `/`-separated path. Returns the input unchanged
+// when there is no slash (i.e. it is already a bare basename).
+const basename = (path: string): string => {
+	const idx = path.lastIndexOf("/");
+	return idx === -1 ? path : path.slice(idx + 1);
+};
+
 /**
  * Recover a public drawer id (the `embedding_id`, e.g.
  * `drawer_<wing>_<room>_<24hex>`) from a `(wing, room, source_file)`
  * locator. `mempalace_search` does not return drawer ids in its result
  * shape, so the search handler enriches its rows by calling this helper.
+ *
+ * **`source_file` matching is basename-aware.** `mempalace_search` reports
+ * `source_file` as a bare basename (e.g. `bqhncg1rr.txt`), but the
+ * `embedding_metadata.source_file` value is the full absolute path the
+ * memory was mined from (e.g. `/Users/…/tool-results/bqhncg1rr.txt`). An
+ * exact-equality match would therefore resolve nothing. We match either the
+ * exact stored value (covers installs that store bare basenames, and the
+ * future case where search returns a full path) OR any stored path whose
+ * final `/`-segment equals the locator's basename.
  *
  * When a single source file produced multiple chunks, returns the first
  * by `chunk_index ASC` (falling back to `created_at ASC, e.id ASC` when
@@ -265,7 +287,8 @@ export const findDrawerIdByLocator = async (
 	               ON em_chunk.id = em_w.id AND em_chunk.key = 'chunk_index'
 	             WHERE em_w.key = 'wing' AND em_w.string_value = ?
 	               AND em_r.key = 'room' AND em_r.string_value = ?
-	               AND em_s.key = 'source_file' AND em_s.string_value = ?
+	               AND em_s.key = 'source_file'
+	               AND (em_s.string_value = ? OR em_s.string_value LIKE ? ESCAPE '\\')
 	               AND e.segment_id IN (${placeholders(segIds.length)})
 	             ORDER BY (em_chunk.int_value IS NULL) ASC,
 	                      em_chunk.int_value ASC,
@@ -273,7 +296,16 @@ export const findDrawerIdByLocator = async (
 	                      e.id ASC
 	             LIMIT 1`;
 
-	const params: (string | number)[] = [opts.wingId, opts.roomId, opts.sourceFile, ...segIds];
+	// Suffix pattern matches any stored path ending in `/<basename>`. The
+	// leading slash in the pattern prevents `foo.md` matching `barfoo.md`.
+	const suffixPattern = `%/${escapeLike(basename(opts.sourceFile))}`;
+	const params: (string | number)[] = [
+		opts.wingId,
+		opts.roomId,
+		opts.sourceFile,
+		suffixPattern,
+		...segIds,
+	];
 	const row = conn.db.prepare(sql).get(...params) as { embedding_id: string } | undefined;
 	return row?.embedding_id ?? null;
 };

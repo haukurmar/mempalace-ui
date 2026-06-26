@@ -19,6 +19,10 @@
 			"types": "./src/colors/index.ts",
 			"default": "./src/colors/index.ts"
 		},
+		"./graph": {
+			"types": "./src/graph.ts",
+			"default": "./src/graph.ts"
+		},
 		"./palette": {
 			"types": "./src/palette.ts",
 			"default": "./src/palette.ts"

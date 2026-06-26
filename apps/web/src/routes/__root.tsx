@@ -145,7 +145,25 @@ export const Route = createRootRouteWithContext<RootRouteContext>()({
 				content: "Local web UI for browsing and curating your MemPalace.",
 			},
 		],
-		links: [{ rel: "stylesheet", href: appCss }],
+		links: [
+			{ rel: "stylesheet", href: appCss },
+			// Preload the hero faces so the Observatory masthead + telemetry resolve
+			// in Lora/JetBrains Mono on first paint rather than flashing system fonts.
+			{
+				rel: "preload",
+				href: "/fonts/lora-400.woff2",
+				as: "font",
+				type: "font/woff2",
+				crossOrigin: "anonymous",
+			},
+			{
+				rel: "preload",
+				href: "/fonts/jetbrains-mono-400.woff2",
+				as: "font",
+				type: "font/woff2",
+				crossOrigin: "anonymous",
+			},
+		],
 	}),
 	component: RootComponent,
 });

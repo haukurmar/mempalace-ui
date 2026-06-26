@@ -131,6 +131,7 @@ const stubSqliteClient = (err: Error): SqliteClient => {
 		getDrawerEmbeddingSummary: reject,
 		findDrawerIdByLocator: reject,
 		getDrawersMetadata: reject,
+		listGraphNodes: reject,
 		dispose: () => {},
 	};
 };

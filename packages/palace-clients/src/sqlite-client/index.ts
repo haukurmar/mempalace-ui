@@ -16,6 +16,7 @@ import {
 	listDrawersByRoom,
 } from "./drawers";
 import { type EmbeddingSummaryResult, getDrawerEmbeddingSummary } from "./embeddings";
+import { type GraphNodes, type ListGraphNodesOpts, listGraphNodes } from "./graph";
 import { getDrawersMetadata } from "./metadata";
 import { getStatus, type SqliteStatus } from "./status";
 import { type ListRoomsOpts, listRooms, listWings } from "./wings";
@@ -31,6 +32,7 @@ export type SqliteClient = {
 	getDrawerEmbeddingSummary: (id: string) => Promise<EmbeddingSummaryResult>;
 	findDrawerIdByLocator: (opts: FindDrawerIdByLocatorOpts) => Promise<string | null>;
 	getDrawersMetadata: (embeddingIds: readonly string[]) => Promise<Map<string, MetadataRecord>>;
+	listGraphNodes: (opts?: ListGraphNodesOpts) => Promise<GraphNodes>;
 	dispose: () => void;
 };
 
@@ -53,6 +55,7 @@ export const createSqliteClient = (opts: CreateSqliteClientOpts): SqliteClient =
 		getDrawerEmbeddingSummary: (id) => getDrawerEmbeddingSummary(conn, id),
 		findDrawerIdByLocator: (o) => findDrawerIdByLocator(conn, o),
 		getDrawersMetadata: (ids) => getDrawersMetadata(conn, ids),
+		listGraphNodes: (o) => listGraphNodes(conn, o),
 		dispose: conn.dispose,
 	};
 };
@@ -66,5 +69,6 @@ export type {
 	ListDrawersByRoomOpts,
 } from "./drawers";
 export type { EmbeddingSummaryResult } from "./embeddings";
+export type { GraphNodes, ListGraphNodesOpts } from "./graph";
 export type { SqliteStatus } from "./status";
 export type { ListRoomsOpts } from "./wings";

@@ -2,7 +2,7 @@
 // unit-tested without React (the hook itself only wraps these in state + toasts).
 // No DOM/React imports here — just localStorage access guarded for SSR.
 
-import type { GraphColorMode, GraphLayoutMode } from "../-renderer/GraphRenderer";
+import type { GraphColorMode, GraphLayoutMode } from "../../../graph/renderer/GraphRenderer";
 
 // Persisted across sessions (spec: "mode persists across sessions").
 export const COLOR_KEY = "mempalace.graph.colorMode";

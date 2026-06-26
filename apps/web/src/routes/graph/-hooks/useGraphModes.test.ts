@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { GraphColorMode } from "../-renderer/GraphRenderer";
+import type { GraphColorMode } from "../../../graph/renderer/GraphRenderer";
 import {
 	COLOR_KEY,
 	COLOR_MODE_ORDER,

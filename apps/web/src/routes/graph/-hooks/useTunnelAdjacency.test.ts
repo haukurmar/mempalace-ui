@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GraphNodeData, GraphTunnel } from "../-renderer/GraphRenderer";
+import type { GraphNodeData, GraphTunnel } from "../../../graph/renderer/GraphRenderer";
 import { createTunnelAdjacency } from "./useTunnelAdjacency";
 
 const nodesFrom = (ids: readonly string[]): GraphNodeData => ({

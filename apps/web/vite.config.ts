@@ -9,7 +9,7 @@ import { defineConfig } from "vite";
 // interop. The /graph route never uses cosmos's built-in FPS monitor, so we
 // alias gl-bench to a no-op stub.
 const glBenchShim = fileURLToPath(
-	new URL("./src/routes/graph/-renderer/gl-bench-shim.ts", import.meta.url),
+	new URL("./src/graph/renderer/gl-bench-shim.ts", import.meta.url),
 );
 
 export default defineConfig({

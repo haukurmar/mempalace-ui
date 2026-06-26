@@ -1,6 +1,6 @@
 import { useKeybind, useScope } from "@memui/ui/keyboard";
 import type { FC } from "react";
-import type { GraphLayoutMode } from "../-renderer/GraphRenderer";
+import type { GraphLayoutMode } from "../../../graph/renderer/GraphRenderer";
 
 export type GraphKeybindingsProps = {
 	/** Whether a node is currently isolated (focus mode). Drives the Esc seam. */

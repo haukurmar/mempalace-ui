@@ -1,6 +1,10 @@
 import { useMemo } from "react";
-import type { GraphNodeData, GraphTunnel } from "../-renderer/GraphRenderer";
-import { buildIdToIndex, buildTunnelLinks, twoHopNeighborhood } from "../-renderer/tunnels";
+import type { GraphNodeData, GraphTunnel } from "../../../graph/renderer/GraphRenderer";
+import {
+	buildIdToIndex,
+	buildTunnelLinks,
+	twoHopNeighborhood,
+} from "../../../graph/renderer/tunnels";
 
 export type UseTunnelAdjacency = {
 	/**

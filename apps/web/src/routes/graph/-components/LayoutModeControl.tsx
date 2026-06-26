@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import type { GraphLayoutMode } from "../-renderer/GraphRenderer";
+import type { GraphLayoutMode } from "../../../graph/renderer/GraphRenderer";
 import { LayoutModeButton } from "./LayoutModeButton";
 
 export type LayoutModeControlProps = {

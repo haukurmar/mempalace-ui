@@ -3,6 +3,7 @@ import { GraphPanelLayout } from "@memui/ui/patterns";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { type FC, useCallback, useMemo, useState } from "react";
+import { hasClusterIds } from "../../graph/renderer/colors";
 import { findTunnels, listGraphNodes } from "../../server/functions";
 import { GraphCanvas } from "./-components/GraphCanvas";
 import { GraphControls } from "./-components/GraphControls";
@@ -10,7 +11,6 @@ import { GraphKeybindings } from "./-components/GraphKeybindings";
 import { SelectedDrawerPanel } from "./-components/SelectedDrawerPanel";
 import { useGraphModes } from "./-hooks/useGraphModes";
 import { useTunnelAdjacency } from "./-hooks/useTunnelAdjacency";
-import { hasClusterIds } from "./-renderer/colors";
 
 const GraphView: FC = () => {
 	const [selectedId, setSelectedId] = useState<string | null>(null);

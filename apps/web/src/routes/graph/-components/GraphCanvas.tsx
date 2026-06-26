@@ -1,12 +1,12 @@
 import { type FC, useEffect, useRef } from "react";
-import { createCosmographRenderer } from "../-renderer/CosmographRenderer";
+import { createCosmographRenderer } from "../../../graph/renderer/CosmographRenderer";
 import type {
 	GraphColorMode,
 	GraphLayoutMode,
 	GraphNodeData,
 	GraphRenderer,
 	GraphTunnel,
-} from "../-renderer/GraphRenderer";
+} from "../../../graph/renderer/GraphRenderer";
 
 export type GraphCanvasProps = {
 	nodes: GraphNodeData;

@@ -60,6 +60,31 @@ export type GraphColorMode = "room" | "recency" | "size" | "decay" | "cluster";
 /** Force-tuning layout modes switched by `1` / `2` / `3` (wave 12.4). */
 export type GraphLayoutMode = "explode" | "orbit" | "cluster";
 
+/**
+ * Ambient mode (Observatory home route). Turns the same engine into a calm,
+ * dimmed, slowly-breathing wallpaper of the whole palace: no node picking, a
+ * gentle global twinkle, and wing-anchored DOM labels driven by the projection
+ * helpers below. Additive over the Phase-12 interface — the /graph route never
+ * calls any of it, so the frozen interactive contract is untouched.
+ */
+export type AmbientConfig = {
+	/** Base universal node opacity the constellation rests at (0..1). */
+	readonly nodeOpacity?: number;
+	/** Freeze drift + twinkle (honors `prefers-reduced-motion`). */
+	readonly reducedMotion?: boolean;
+};
+
+/** A wing centroid projected from graph space into canvas pixels for label anchoring. */
+export type WingProjection = {
+	readonly wing: string;
+	/** Centroid x in canvas CSS pixels. */
+	readonly x: number;
+	/** Centroid y in canvas CSS pixels. */
+	readonly y: number;
+	/** Whether the centroid currently falls inside the canvas viewport. */
+	readonly inView: boolean;
+};
+
 /** Events the renderer surfaces to the route. */
 export type GraphRendererEvents = {
 	/** Fires when the user clicks a node; carries the drawer id. */
@@ -101,6 +126,30 @@ export type GraphRenderer = {
 	 * neighborhood; pass `null` to exit focus (wave 12.6).
 	 */
 	isolate(nodeId: string | null): void;
+
+	/**
+	 * Switch the mounted engine into ambient (Observatory) mode: lower the
+	 * universal node opacity, disable user zoom/drag, and start the drift +
+	 * twinkle loop. Idempotent; call after `mount` resolves.
+	 */
+	enterAmbient(config: AmbientConfig): void;
+
+	/**
+	 * Bloom a single wing's cluster (raise its nodes, recede the rest) while in
+	 * ambient mode. `null` restores the resting constellation. Reuses the same
+	 * highlight machinery as `isolate`, keyed by wing instead of neighborhood.
+	 */
+	focusWing(wing: string | null): void;
+
+	/** Ease the camera to frame a wing's cluster over `durationMs` (the dive-in). */
+	flyToWing(wing: string, durationMs: number): void;
+
+	/**
+	 * Project every wing's centroid from graph space into current canvas pixels,
+	 * for anchoring DOM labels over their clusters. Cheap (one entry per wing);
+	 * call on a rAF/interval to keep labels glued through the ambient drift.
+	 */
+	getWingProjections(): readonly WingProjection[];
 
 	/** Subscribe to a renderer event. Returns an unsubscribe function. */
 	on<E extends GraphRendererEventName>(event: E, handler: GraphRendererEvents[E]): () => void;

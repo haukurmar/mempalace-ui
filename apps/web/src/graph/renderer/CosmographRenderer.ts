@@ -1,8 +1,8 @@
 // =============================================================================
 // CosmographRenderer — the cosmos.gl 3.0.0 implementation of GraphRenderer.
 // This is the ONLY module that imports the heavy @cosmos.gl/graph dependency,
-// and it stays route-private (apps/web/src/routes/graph/-renderer) so the dep
-// never leaks into @memui/ui. The 12.1 benchmark proved the engine; this is the
+// and it lives in the shared renderer module (apps/web/src/graph/renderer) so
+// the dep never leaks into @memui/ui. The 12.1 benchmark proved the engine; this is the
 // product wiring of the same API (mount, node buffers, zoom-to-fit, click).
 //
 // IMPLEMENTED in 12.2: mount, columnar node rendering, zoom-to-fit, nodeClick,
@@ -14,8 +14,15 @@
 import type { Graph, GraphConfig } from "@cosmos.gl/graph";
 import { tunnelLink } from "@memui/design-tokens/graph";
 import { primary } from "@memui/design-tokens/palette";
+import {
+	buildAmbientColors,
+	buildAmbientPositions,
+	buildAmbientSizes,
+	buildAmbientWingCentroids,
+} from "./ambient";
 import { buildColorBuffer } from "./colors";
 import type {
+	AmbientConfig,
 	GraphColorMode,
 	GraphLayoutMode,
 	GraphMountData,
@@ -24,6 +31,7 @@ import type {
 	GraphRendererEventName,
 	GraphRendererEvents,
 	GraphTunnel,
+	WingProjection,
 } from "./GraphRenderer";
 import { buildPositions, buildSizes, hexToRgbFloat, SPACE_SIZE } from "./layout";
 import {
@@ -62,6 +70,42 @@ const ISOLATE_FIT_PADDING = 0.3;
 // level, so center on the node at a comfortable, bounded scale instead.
 const ISOLATE_SINGLE_NODE_ZOOM = 8;
 
+// --- Ambient (Observatory home) tuning -------------------------------------
+const TWO_PI = Math.PI * 2;
+// Resting universal node opacity. The per-node depth alpha (ambient.ts) does the
+// dimming now, so this sits high — it's the multiplier the twinkle rides on.
+const AMBIENT_BASE_OPACITY = 0.95;
+// A focused (hovered) wing blooms to this; the rest recede to greyout opacity.
+const AMBIENT_BLOOM_OPACITY = 1;
+// Global twinkle: a slow sine breath around the base opacity (soft shimmer).
+const AMBIENT_TWINKLE_AMPLITUDE = 0.08;
+const AMBIENT_TWINKLE_PERIOD_S = 5.5;
+// Global multiplier on top of the per-node depth-tiered ambient sizes.
+const AMBIENT_POINT_SIZE_SCALE = 1.45;
+// Slow "bloom pulse": the whole field gently swells and recedes in size so the
+// glow breathes. Layered under the opacity twinkle for a living, luminous feel.
+const AMBIENT_BLOOM_PULSE_AMPLITUDE = 0.08;
+const AMBIENT_BLOOM_PULSE_PERIOD_S = 12;
+// Negative fit padding overscans the constellation past the viewport edges so it
+// reads full-bleed rather than a blob marooned in the center.
+const AMBIENT_FIT_MS = 950;
+const AMBIENT_FIT_PADDING = -0.06;
+// Camera "breathing": a barely-there zoom oscillation so the cosmos feels alive.
+const AMBIENT_BREATHE_AMPLITUDE = 0.035;
+const AMBIENT_BREATHE_PERIOD_S = 28;
+// Don't capture the breathe baseline until the entry fit-view has settled.
+const AMBIENT_BREATHE_SETTLE_S = 1.15;
+// Padding when diving the camera into a wing's cluster.
+const AMBIENT_WING_FIT_PADDING = 0.4;
+// Fully transparent clear so the DOM nebula behind the canvas shows through —
+// the stars float over real atmospheric depth, not a flat ink rectangle.
+const AMBIENT_TRANSPARENT_BG: [number, number, number, number] = [0, 0, 0, 0];
+// Cross-wing tunnels in ambient read as faint SILVER threads (pale teal), not the
+// emphasized amber of the interactive view. Token-sourced (primary pale step).
+const AMBIENT_TUNNEL_RGB = hexToRgbFloat(primary[200].background);
+const AMBIENT_TUNNEL_ALPHA = 0.22;
+const AMBIENT_TUNNEL_WIDTH = 0.6;
+
 export const createCosmographRenderer = (): GraphRenderer => {
 	let graph: Graph | null = null;
 	let nodeIds: readonly string[] = [];
@@ -83,6 +127,26 @@ export const createCosmographRenderer = (): GraphRenderer => {
 	// The id currently isolated (focus mode), or null. Stored as the id (not the
 	// index) so an isolate() call that lands before mount can be applied later.
 	let isolatedId: string | null = null;
+	// --- Ambient state -----------------------------------------------------
+	// The DOM container, retained so ambient projection can read the live canvas
+	// size for its in-view test.
+	let containerEl: HTMLElement | null = null;
+	// Wing → centroid in SPACE coordinates (the ring center its cluster blobs
+	// around) and wing → the node indices in that cluster. Both computed once at
+	// mount; the centroid is re-projected to screen each frame for label anchors.
+	let wingSpaceCentroids: Map<string, [number, number]> = new Map();
+	let wingIndices: Map<string, number[]> = new Map();
+	let ambientRaf: number | null = null;
+	let ambientActive = false;
+	let ambientReducedMotion = false;
+	let ambientStart = 0;
+	// Captured once the entry fit-view settles, then breathed around.
+	let ambientBaseZoom: number | null = null;
+	// Suspends the breathe oscillation (e.g. while a wing dive is in flight) so it
+	// doesn't fight a programmatic fitView.
+	let ambientBreatheSuspendedUntil = 0;
+	// The wing currently bloomed in ambient mode, or null for the resting field.
+	let focusedWing: string | null = null;
 	const listeners: { [E in GraphRendererEventName]: Set<GraphRendererEvents[E]> } = {
 		nodeClick: new Set(),
 	};
@@ -96,10 +160,29 @@ export const createCosmographRenderer = (): GraphRenderer => {
 		if (id !== undefined) emitNodeClick(id);
 	};
 
+	// Precompute wing → member node indices (used by ambient mode for the bloom and
+	// the wing dive). One pass; the centroids themselves are set by enterAmbient
+	// against the ambient ring layout.
+	const buildWingIndices = (nodes: GraphNodeData): void => {
+		const indices = new Map<string, number[]>();
+		for (let i = 0; i < nodes.count; i++) {
+			const wing = nodes.wing[i] ?? "";
+			let bucket = indices.get(wing);
+			if (!bucket) {
+				bucket = [];
+				indices.set(wing, bucket);
+			}
+			bucket.push(i);
+		}
+		wingIndices = indices;
+	};
+
 	const mount = async (container: HTMLElement, data: GraphMountData): Promise<void> => {
+		containerEl = container;
 		nodeIds = data.nodes.ids;
 		nodeData = data.nodes;
 		idToIndex = buildIdToIndex(data.nodes.ids);
+		buildWingIndices(data.nodes);
 		// Build from the modes React set on this renderer before mount (restored
 		// from localStorage), so the first frame already shows the persisted state.
 		const positions = buildPositions(data.nodes, layoutMode);
@@ -150,12 +233,16 @@ export const createCosmographRenderer = (): GraphRenderer => {
 	};
 
 	const buildLinkColors = (count: number): Float32Array => {
+		// Ambient mode recolors tunnels to faint silver threads; the interactive
+		// view keeps the emphasized amber.
+		const rgb = ambientActive ? AMBIENT_TUNNEL_RGB : TUNNEL_LINK_RGB;
+		const alpha = ambientActive ? AMBIENT_TUNNEL_ALPHA : TUNNEL_LINK_ALPHA;
 		const colors = new Float32Array(count * 4);
 		for (let i = 0; i < count; i++) {
-			colors[i * 4] = TUNNEL_LINK_RGB[0];
-			colors[i * 4 + 1] = TUNNEL_LINK_RGB[1];
-			colors[i * 4 + 2] = TUNNEL_LINK_RGB[2];
-			colors[i * 4 + 3] = TUNNEL_LINK_ALPHA;
+			colors[i * 4] = rgb[0];
+			colors[i * 4 + 1] = rgb[1];
+			colors[i * 4 + 2] = rgb[2];
+			colors[i * 4 + 3] = alpha;
 		}
 		return colors;
 	};
@@ -174,8 +261,11 @@ export const createCosmographRenderer = (): GraphRenderer => {
 		}
 		graph.setLinks(data.links);
 		graph.setLinkColors(buildLinkColors(data.count));
-		graph.setLinkWidths(new Float32Array(data.count).fill(TUNNEL_LINK_WIDTH));
-		graph.setConfigPartial({ renderLinks: tunnelHighlight });
+		graph.setLinkWidths(
+			new Float32Array(data.count).fill(ambientActive ? AMBIENT_TUNNEL_WIDTH : TUNNEL_LINK_WIDTH),
+		);
+		// Ambient always shows its faint threads; interactive obeys the highlight toggle.
+		graph.setConfigPartial({ renderLinks: ambientActive || tunnelHighlight });
 		graph.render();
 	};
 
@@ -259,6 +349,121 @@ export const createCosmographRenderer = (): GraphRenderer => {
 		if (nodeId === null && wasIsolated) graph.fitView(ZOOM_TO_FIT_MS);
 	};
 
+	// --- Ambient mode ------------------------------------------------------
+	// One rAF step: a soft global twinkle on opacity + a slow zoom "breath". The
+	// focused wing (if any) holds steady at bloom opacity instead of twinkling.
+	const ambientTick = (): void => {
+		if (!graph || !ambientActive) return;
+		const now = performance.now();
+		const t = (now - ambientStart) / 1000;
+
+		const twinkle =
+			AMBIENT_BASE_OPACITY +
+			AMBIENT_TWINKLE_AMPLITUDE * Math.sin((TWO_PI * t) / AMBIENT_TWINKLE_PERIOD_S);
+		const opacity = focusedWing !== null ? AMBIENT_BLOOM_OPACITY : twinkle;
+		// Slow bloom pulse: the field's point size gently swells and recedes so the
+		// glow breathes, out of phase with the opacity twinkle for a living shimmer.
+		const pulse =
+			1 + AMBIENT_BLOOM_PULSE_AMPLITUDE * Math.sin((TWO_PI * t) / AMBIENT_BLOOM_PULSE_PERIOD_S);
+		graph.setConfigPartial({
+			pointOpacity: Math.max(0, Math.min(1, opacity)),
+			pointSizeScale: AMBIENT_POINT_SIZE_SCALE * pulse,
+		});
+
+		// Breathe the camera only when no wing is bloomed and no dive is settling.
+		if (focusedWing === null && now >= ambientBreatheSuspendedUntil) {
+			if (ambientBaseZoom === null && t >= AMBIENT_BREATHE_SETTLE_S) {
+				ambientBaseZoom = graph.getZoomLevel();
+			}
+			if (ambientBaseZoom !== null) {
+				const breath =
+					1 + AMBIENT_BREATHE_AMPLITUDE * Math.sin((TWO_PI * t) / AMBIENT_BREATHE_PERIOD_S);
+				graph.setZoomLevel(ambientBaseZoom * breath, 0, false);
+			}
+		}
+		graph.render();
+		ambientRaf = requestAnimationFrame(ambientTick);
+	};
+
+	const enterAmbient = (config: AmbientConfig): void => {
+		if (!graph) return;
+		ambientActive = true;
+		ambientReducedMotion = config.reducedMotion ?? false;
+		const baseOpacity = config.nodeOpacity ?? AMBIENT_BASE_OPACITY;
+		// A calm wallpaper: no node picking, no user zoom/drag — the overlay's wing
+		// labels own all interaction. Dim the whole field to the resting opacity.
+		graph.setConfigPartial({
+			enableZoom: false,
+			enableDrag: false,
+			pointOpacity: baseOpacity,
+			pointSizeScale: AMBIENT_POINT_SIZE_SCALE,
+			// Transparent clear lets the DOM nebula show through behind the stars.
+			backgroundColor: AMBIENT_TRANSPARENT_BG,
+		});
+		// Swap in the ambient galaxy: a wide ring of tight, bright cluster cores
+		// (positions), depth-tiered star sizes, and depth-tiered wing-hue colors
+		// (bright whitened near stars → faint far dust). Recompute the wing
+		// centroids against the AMBIENT ring so labels anchor to the new layout.
+		if (nodeData) {
+			graph.setPointPositions(buildAmbientPositions(nodeData), true);
+			graph.setPointSizes(buildAmbientSizes(nodeData));
+			graph.setPointColors(buildAmbientColors(nodeData, colorMode));
+			wingSpaceCentroids = buildAmbientWingCentroids(nodeData);
+		}
+		// Now that ambientActive is set, repaint any tunnels as silver threads.
+		applyTunnels();
+		// Overscan-fit so the field bleeds past the edges instead of sitting small
+		// in the middle. In reduced motion this is the final, static framing.
+		graph.fitView(ambientReducedMotion ? 0 : AMBIENT_FIT_MS, AMBIENT_FIT_PADDING, false);
+		graph.render();
+		if (ambientReducedMotion) return; // opacity-only; no drift/twinkle loop.
+		ambientStart = performance.now();
+		ambientBaseZoom = null;
+		if (ambientRaf === null) ambientRaf = requestAnimationFrame(ambientTick);
+	};
+
+	const focusWing = (wing: string | null): void => {
+		focusedWing = wing;
+		if (!graph) return;
+		if (wing === null) {
+			graph.setConfigPartial({
+				highlightedPointIndices: undefined,
+				pointOpacity: ambientReducedMotion ? AMBIENT_BASE_OPACITY : undefined,
+			});
+			graph.render();
+			return;
+		}
+		const indices = wingIndices.get(wing);
+		if (!indices || indices.length === 0) return;
+		graph.setConfigPartial({
+			highlightedPointIndices: indices,
+			// In reduced-motion there's no loop to hold the bloom, so set it here.
+			pointOpacity: ambientReducedMotion ? AMBIENT_BLOOM_OPACITY : undefined,
+		});
+		graph.render();
+	};
+
+	const flyToWing = (wing: string, durationMs: number): void => {
+		if (!graph) return;
+		const indices = wingIndices.get(wing);
+		if (!indices || indices.length === 0) return;
+		// Hold the breathe oscillation off until the dive has fully settled.
+		ambientBreatheSuspendedUntil = performance.now() + durationMs + 200;
+		graph.fitViewByPointIndices(indices, durationMs, AMBIENT_WING_FIT_PADDING, false);
+	};
+
+	const getWingProjections = (): readonly WingProjection[] => {
+		if (!graph || !containerEl) return [];
+		const width = containerEl.clientWidth;
+		const height = containerEl.clientHeight;
+		const out: WingProjection[] = [];
+		for (const [wing, centroid] of wingSpaceCentroids) {
+			const [x, y] = graph.spaceToScreenPosition(centroid);
+			out.push({ wing, x, y, inView: x >= 0 && x <= width && y >= 0 && y <= height });
+		}
+		return out;
+	};
+
 	const on = <E extends GraphRendererEventName>(
 		event: E,
 		handler: GraphRendererEvents[E],
@@ -270,6 +475,9 @@ export const createCosmographRenderer = (): GraphRenderer => {
 	};
 
 	const destroy = (): void => {
+		if (ambientRaf !== null) cancelAnimationFrame(ambientRaf);
+		ambientRaf = null;
+		ambientActive = false;
 		graph?.destroy();
 		graph = null;
 		nodeIds = [];
@@ -278,6 +486,10 @@ export const createCosmographRenderer = (): GraphRenderer => {
 		rawTunnels = null;
 		tunnelData = null;
 		isolatedId = null;
+		containerEl = null;
+		wingSpaceCentroids = new Map();
+		wingIndices = new Map();
+		focusedWing = null;
 		listeners.nodeClick.clear();
 	};
 
@@ -288,6 +500,10 @@ export const createCosmographRenderer = (): GraphRenderer => {
 		setLayoutMode,
 		setTunnelHighlight,
 		isolate,
+		enterAmbient,
+		focusWing,
+		flyToWing,
+		getWingProjections,
 		on,
 		destroy,
 	};

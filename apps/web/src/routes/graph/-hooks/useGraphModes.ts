@@ -1,6 +1,6 @@
 import { toast } from "@memui/ui/primitives";
 import { useCallback, useState } from "react";
-import type { GraphColorMode, GraphLayoutMode } from "../-renderer/GraphRenderer";
+import type { GraphColorMode, GraphLayoutMode } from "../../../graph/renderer/GraphRenderer";
 import {
 	COLOR_KEY,
 	COLOR_MODE_LABELS,

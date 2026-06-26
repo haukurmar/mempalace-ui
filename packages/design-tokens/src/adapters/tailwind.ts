@@ -15,10 +15,15 @@
  *   --leading-<size>                 role-agnostic line-height px
  *   --font-weight-<role>-<weight>    role-scoped weight
  *   --z-<key>                        z-index integer
+ *   --duration-<key>                 motion duration ms
+ *   --ease-<key>                     named easing cubic-bezier
+ *   --motion-<name>-duration         semantic transition duration (var ref)
+ *   --motion-<name>-ease             semantic transition easing (var ref)
  */
 
 import { breakpoints } from "../breakpoints";
 import type { ColorFamily } from "../colors/types";
+import { duration, easing, motion } from "../motion";
 import { palette } from "../palette";
 import { radius } from "../radius";
 import { shadcnSemanticMapping } from "../shadcn-semantic";
@@ -67,6 +72,30 @@ const weightLines = () => {
 	return lines;
 };
 
+const motionLines = () => {
+	const lines: string[] = [];
+
+	for (const [key, value] of Object.entries(duration)) {
+		lines.push(`\t--duration-${key}: ${value}ms;`);
+	}
+	for (const [key, value] of Object.entries(easing)) {
+		lines.push(`\t--ease-${key}: ${value};`);
+	}
+
+	// Semantic transitions reference the primitive vars (not literals) so a
+	// `prefers-reduced-motion` override of `--duration-*` cascades through them.
+	const durationKeyByValue = new Map(Object.entries(duration).map(([k, v]) => [v, k]));
+	const easingKeyByValue = new Map(Object.entries(easing).map(([k, v]) => [v, k]));
+	for (const [name, def] of Object.entries(motion)) {
+		const durationKey = durationKeyByValue.get(def.duration);
+		const easingKey = easingKeyByValue.get(def.easing);
+		lines.push(`\t--motion-${name}-duration: var(--duration-${durationKey});`);
+		lines.push(`\t--motion-${name}-ease: var(--ease-${easingKey});`);
+	}
+
+	return lines;
+};
+
 export const toTailwindTheme = (): string => {
 	const lines: string[] = [];
 
@@ -97,6 +126,8 @@ export const toTailwindTheme = (): string => {
 	for (const [key, value] of Object.entries(zIndices)) {
 		lines.push(`\t--z-${key}: ${value};`);
 	}
+
+	lines.push(...motionLines());
 
 	return `@theme {\n${lines.join("\n")}\n}\n`;
 };

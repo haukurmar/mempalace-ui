@@ -15,6 +15,8 @@ export {
 } from "./graph";
 export type { GridUnits } from "./grid";
 export { GRID_UNIT, size } from "./grid";
+// Motion (durations, easing curves, semantic transitions)
+export { duration, easing, motion } from "./motion";
 export type { Palette } from "./palette";
 // Palette (role mapping)
 export { palette, primary, secondary } from "./palette";

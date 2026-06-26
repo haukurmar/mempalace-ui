@@ -1,5 +1,9 @@
 # MemPalace UI
 
+[![Type Check](https://github.com/haukurmar/mempalace-ui/actions/workflows/typecheck.yml/badge.svg)](https://github.com/haukurmar/mempalace-ui/actions/workflows/typecheck.yml)
+[![Lint](https://github.com/haukurmar/mempalace-ui/actions/workflows/lint.yml/badge.svg)](https://github.com/haukurmar/mempalace-ui/actions/workflows/lint.yml)
+[![Tests](https://github.com/haukurmar/mempalace-ui/actions/workflows/test.yml/badge.svg)](https://github.com/haukurmar/mempalace-ui/actions/workflows/test.yml)
+
 A local, keyboard-first web interface for [MemPalace](https://github.com/MemPalace/mempalace). Browse, search, and explore a palace of tens of thousands of memories without ever dropping into the CLI.
 
 ## Why this exists

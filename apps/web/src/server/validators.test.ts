@@ -4,6 +4,7 @@ import {
 	validateGetDrawer,
 	validateGetDrawerEmbeddingSummary,
 	validateListDrawersByRoom,
+	validateListGraphNodes,
 	validateListRooms,
 	validateSearchSemantic,
 } from "./validators";
@@ -108,6 +109,21 @@ describe("validateSearchSemantic", () => {
 	it("rejects overfetchFactor outside [1,5]", () => {
 		expect(() => validateSearchSemantic({ query: "hi", overfetchFactor: 0 })).toThrow(TypeError);
 		expect(() => validateSearchSemantic({ query: "hi", overfetchFactor: 6 })).toThrow(TypeError);
+	});
+});
+
+describe("validateListGraphNodes", () => {
+	it("accepts undefined", () => {
+		expect(validateListGraphNodes(undefined)).toEqual({});
+	});
+	it("accepts an empty object", () => {
+		expect(validateListGraphNodes({})).toEqual({});
+	});
+	it("forwards the optional wing filter", () => {
+		expect(validateListGraphNodes({ wing: "code" })).toEqual({ wing: "code" });
+	});
+	it("rejects a non-string wing", () => {
+		expect(() => validateListGraphNodes({ wing: 42 })).toThrow(TypeError);
 	});
 });
 

@@ -1,6 +1,7 @@
 import {
 	type Connection,
 	type EmbeddingSummaryResult,
+	type GraphNodes,
 	IncompatiblePalaceError,
 } from "@memui/palace-clients";
 import type { Drawer, DrawerSummary } from "@memui/palace-types/drawer";
@@ -205,6 +206,22 @@ export const searchSemanticHandler = async (
 		...(filterByMetadata !== undefined ? { filterByMetadata } : {}),
 	};
 	return conn.mcp.searchSemantic(opts);
+};
+
+export type ListGraphNodesInput = { wing?: string };
+
+/**
+ * Project the whole palace into the columnar `GraphNodes` shape for the
+ * WebGL graph view. Intentionally uncapped — the reader returns every
+ * drawer (~164k today) in a single grouped scan. Returns plain parallel
+ * arrays so the strict server-fn serializer passes it through untouched.
+ */
+export const listGraphNodesHandler = async (
+	conn: Connection,
+	input: ListGraphNodesInput,
+): Promise<GraphNodes> => {
+	assertSqliteReady(conn);
+	return conn.sqlite.listGraphNodes(input.wing !== undefined ? { wing: input.wing } : undefined);
 };
 
 export type FindTunnelsInput = { wingA?: string; wingB?: string };

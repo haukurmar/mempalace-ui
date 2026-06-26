@@ -1,3 +1,5 @@
+export type { AppRailProps, RailItemData, RailItemRenderArgs, RailItemRenderer } from "./app-rail";
+export { AppRail, RailItem } from "./app-rail";
 export type { CommandAction, CommandBarProps } from "./command-bar";
 export { CommandBar } from "./command-bar";
 export type { DrawerCardProps, DrawerSummary } from "./drawer-card";
@@ -31,6 +33,8 @@ export type { ResultRowProps, SearchResult } from "./result-row";
 export { ResultRow } from "./result-row";
 export type { RoomNode, RoomTreeProps, WingNode } from "./room-tree";
 export { RoomTree } from "./room-tree";
+export type { RouteProgressBarProps } from "./route-progress-bar";
+export { RouteProgressBar } from "./route-progress-bar";
 export type { ScopeChipProps, ScopeRoom, ScopeWing } from "./scope-chip";
 export { ScopeChip } from "./scope-chip";
 export type { SearchFieldProps } from "./search-field";

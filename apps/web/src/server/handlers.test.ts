@@ -1,4 +1,4 @@
-import type { Connection, EmbeddingSummaryResult } from "@memui/palace-clients";
+import type { Connection, EmbeddingSummaryResult, GraphNodes } from "@memui/palace-clients";
 import type { Drawer, DrawerSummary } from "@memui/palace-types/drawer";
 import type { Room } from "@memui/palace-types/room";
 import type { SearchResponse } from "@memui/palace-types/search";
@@ -15,6 +15,7 @@ import {
 	listDrawerSummariesByRoomHandler,
 	listDrawerSummariesByWingHandler,
 	listDrawersByRoomHandler,
+	listGraphNodesHandler,
 	listRoomsHandler,
 	listWingsHandler,
 	reconnectMcpHandler,
@@ -35,7 +36,18 @@ type MockOpts = {
 	search?: SearchResponse;
 	tunnels?: Tunnel[];
 	embeddingSummary?: EmbeddingSummaryResult;
+	graphNodes?: GraphNodes;
 };
+
+const emptyGraphNodes = (): GraphNodes => ({
+	ids: [],
+	wing: [],
+	room: [],
+	createdAt: [],
+	size: [],
+	clusterId: [],
+	count: 0,
+});
 
 const makeConnection = (opts: MockOpts = {}): Connection => {
 	const sqliteOk = opts.sqliteOk ?? true;
@@ -61,6 +73,7 @@ const makeConnection = (opts: MockOpts = {}): Connection => {
 			),
 			findDrawerIdByLocator: vi.fn(async () => null),
 			getDrawersMetadata: vi.fn(async () => new Map()),
+			listGraphNodes: vi.fn(async () => opts.graphNodes ?? emptyGraphNodes()),
 			dispose: vi.fn(),
 		},
 		mcp: {
@@ -358,6 +371,36 @@ describe("searchSemanticHandler", () => {
 			filterByMetadata?: unknown;
 		};
 		expect(call.filterByMetadata).toBeUndefined();
+	});
+});
+
+describe("listGraphNodesHandler", () => {
+	it("returns the columnar graph-node payload from the sqlite client", async () => {
+		const graphNodes: GraphNodes = {
+			ids: ["drawer_a", "drawer_b"],
+			wing: ["code", "docs"],
+			room: ["general", "api"],
+			createdAt: [1_700_000_000_000, 1_700_000_100_000],
+			size: [120, 340],
+			clusterId: [null, null],
+			count: 2,
+		};
+		const conn = makeConnection({ graphNodes });
+		const result = await listGraphNodesHandler(conn, {});
+		expect(result).toEqual(graphNodes);
+		expect(result.ids).toHaveLength(result.count);
+		expect(conn.sqlite.listGraphNodes).toHaveBeenCalledWith(undefined);
+	});
+
+	it("forwards the optional wing filter to the sqlite client", async () => {
+		const conn = makeConnection();
+		await listGraphNodesHandler(conn, { wing: "code" });
+		expect(conn.sqlite.listGraphNodes).toHaveBeenCalledWith({ wing: "code" });
+	});
+
+	it("throws PalaceUnavailableError when sqlite is errored", async () => {
+		const conn = makeConnection({ sqliteOk: false });
+		await expect(listGraphNodesHandler(conn, {})).rejects.toBeInstanceOf(PalaceUnavailableError);
 	});
 });
 

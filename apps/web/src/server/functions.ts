@@ -9,12 +9,12 @@ import {
 	listDrawerSummariesByRoomHandler,
 	listDrawerSummariesByWingHandler,
 	listDrawersByRoomHandler,
+	listGraphNodesHandler,
 	listRoomsHandler,
 	listWingsHandler,
 	reconnectMcpHandler,
 	searchSemanticHandler,
 } from "./handlers";
-import { getLastChangeAt } from "./watch";
 import {
 	validateFindTunnels,
 	validateGetDrawer,
@@ -22,9 +22,11 @@ import {
 	validateListDrawerSummariesByRoom,
 	validateListDrawerSummariesByWing,
 	validateListDrawersByRoom,
+	validateListGraphNodes,
 	validateListRooms,
 	validateSearchSemantic,
 } from "./validators";
+import { getLastChangeAt } from "./watch";
 
 export const getStatus = createServerFn({ method: "GET" }).handler(async () => {
 	const conn = await getConnection();
@@ -88,6 +90,13 @@ export const searchSemantic = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		const conn = await getConnection();
 		return searchSemanticHandler(conn, data);
+	});
+
+export const listGraphNodes = createServerFn({ method: "GET" })
+	.inputValidator(validateListGraphNodes)
+	.handler(async ({ data }) => {
+		const conn = await getConnection();
+		return listGraphNodesHandler(conn, data);
 	});
 
 export const findTunnels = createServerFn({ method: "GET" })

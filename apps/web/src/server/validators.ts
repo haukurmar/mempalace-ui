@@ -6,6 +6,7 @@ import type {
 	ListDrawerSummariesByRoomInput,
 	ListDrawerSummariesByWingInput,
 	ListDrawersByRoomInput,
+	ListGraphNodesInput,
 	ListRoomsInput,
 	SearchSemanticInput,
 } from "./handlers";
@@ -132,6 +133,15 @@ export const validateSearchSemantic = (raw: unknown): SearchSemanticInput => {
 	}
 	const overfetchFactor = optBoundedNumber(raw.overfetchFactor, "overfetchFactor", 1, 5);
 	if (overfetchFactor !== undefined) out.overfetchFactor = overfetchFactor;
+	return out;
+};
+
+export const validateListGraphNodes = (raw: unknown): ListGraphNodesInput => {
+	if (raw === undefined) return {};
+	if (!isObject(raw)) throw new TypeError("listGraphNodes input must be an object");
+	const out: ListGraphNodesInput = {};
+	const wing = optString(raw.wing, "wing");
+	if (wing !== undefined) out.wing = wing;
 	return out;
 };
 

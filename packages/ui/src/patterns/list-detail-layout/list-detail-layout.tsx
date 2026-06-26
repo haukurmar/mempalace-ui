@@ -91,7 +91,7 @@ export const ListDetailLayout: FC<ListDetailLayoutProps> = (props) => {
 				>
 					{sidebar}
 				</aside>
-				<main className="min-w-0 flex-1 overflow-y-auto">{main}</main>
+				<div className="min-w-0 flex-1 overflow-y-auto">{main}</div>
 			</div>
 			<Sheet open={detailOpen} onOpenChange={handleOpenChange}>
 				<SheetContent

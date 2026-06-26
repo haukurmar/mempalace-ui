@@ -1,5 +1,6 @@
 import type { SearchResponse, SearchResult } from "@memui/palace-types/search";
 import { FilterRuleBuilder, type Group, type WhereClause } from "@memui/ui/components";
+import { ListDetailLayout } from "@memui/ui/patterns";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FC, useEffect, useMemo, useState } from "react";
@@ -21,11 +22,13 @@ import {
 import { SearchResultCounter } from "./-search/search-result-counter";
 import { SearchResultsList } from "./-search/search-results-list";
 import { type SearchHistoryEntry, useSearchHistory } from "./-search/use-search-history";
+import { DrawerDetail } from "./browse/-components/drawer-detail";
 
 export type SearchPageSearch = {
 	q?: string;
 	wing?: string;
 	filters?: string;
+	drawer?: string;
 };
 
 const validateSearchParams = (raw: Record<string, unknown>): SearchPageSearch => {
@@ -33,6 +36,7 @@ const validateSearchParams = (raw: Record<string, unknown>): SearchPageSearch =>
 	if (typeof raw.q === "string" && raw.q.length > 0) out.q = raw.q;
 	if (typeof raw.wing === "string" && raw.wing.length > 0) out.wing = raw.wing;
 	if (typeof raw.filters === "string" && raw.filters.length > 0) out.filters = raw.filters;
+	if (typeof raw.drawer === "string" && raw.drawer.length > 0) out.drawer = raw.drawer;
 	return out;
 };
 
@@ -136,14 +140,43 @@ const SearchPage: FC = () => {
 		});
 	};
 
+	// Open the detail as an in-context overlay over the search results by setting
+	// the `drawer` param on the CURRENT route — q/wing/filters are preserved, so
+	// closing the detail returns the user to their results exactly as they were.
 	const handleSelectResult = (result: SearchResult) => {
-		if (!result.drawerId) return;
+		const drawerId = result.drawerId;
+		// Respect the unresolved-drawer disabled state — inert rows can't open.
+		if (!drawerId) return;
 		void navigate({
-			to: "/browse/$wing/$room",
-			params: { wing: result.wing.id, room: result.room.id },
-			search: { drawer: result.drawerId },
+			to: "/search",
+			search: (prev) => ({ ...prev, drawer: drawerId }),
 		});
 	};
+
+	// Clear ONLY the `drawer` param; q/wing/filters survive so the results list
+	// (and its preserved active-index cursor) stay put behind the closing panel.
+	const handleCloseDetail = () => {
+		void navigate({
+			to: "/search",
+			search: (prev) => {
+				const { drawer: _drop, ...rest } = prev;
+				return rest;
+			},
+		});
+	};
+
+	const activeDrawerId = search.drawer;
+
+	const filterSidebar = (
+		<div className="h-full overflow-y-auto p-4">
+			<FilterRuleBuilder
+				fields={SEARCH_FILTER_FIELDS}
+				value={filterGroup ?? undefined}
+				onChange={handleFilterChange}
+				onApply={handleFilterApply}
+			/>
+		</div>
+	);
 
 	return (
 		<div className="flex h-full w-full flex-col">
@@ -157,26 +190,31 @@ const SearchPage: FC = () => {
 					autoFocus
 				/>
 			</header>
-			<div className="flex min-h-0 flex-1 gap-4 px-6 py-4">
-				<aside className="w-80 shrink-0 overflow-y-auto">
-					<FilterRuleBuilder
-						fields={SEARCH_FILTER_FIELDS}
-						value={filterGroup ?? undefined}
-						onChange={handleFilterChange}
-						onApply={handleFilterApply}
-					/>
-				</aside>
-				<main className="min-w-0 flex-1 overflow-y-auto">
-					<SearchPageBody
-						query={activeQuery}
-						isFetching={searchQuery.isFetching}
-						isError={searchQuery.isError}
-						error={searchQuery.error}
-						response={searchQuery.data}
-						results={orderedResults}
-						onSelectResult={handleSelectResult}
-					/>
-				</main>
+			<div className="min-h-0 flex-1">
+				<ListDetailLayout
+					sidebar={filterSidebar}
+					sidebarWidth="w-80"
+					main={
+						<main className="px-6 py-4">
+							<SearchPageBody
+								query={activeQuery}
+								isFetching={searchQuery.isFetching}
+								isError={searchQuery.isError}
+								error={searchQuery.error}
+								response={searchQuery.data}
+								results={orderedResults}
+								onSelectResult={handleSelectResult}
+							/>
+						</main>
+					}
+					detail={
+						activeDrawerId ? (
+							<DrawerDetail drawerId={activeDrawerId} onClose={handleCloseDetail} />
+						) : null
+					}
+					detailOpen={Boolean(activeDrawerId)}
+					onDetailClose={handleCloseDetail}
+				/>
 			</div>
 		</div>
 	);

@@ -11,13 +11,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
-	Outlet,
 	Scripts,
 	useNavigate,
 } from "@tanstack/react-router";
 import { type FC, type PropsWithChildren, useCallback } from "react";
 import { reconnectMcp } from "../server/functions";
 import appCss from "../styles.css?url";
+import { AppFrame } from "./-app-shell/AppFrame";
 
 type RootRouteContext = {
 	queryClient: QueryClient;
@@ -28,11 +28,14 @@ const RootDocument: FC<PropsWithChildren> = (props) => {
 
 	return (
 		// Phase 15 wires data-density from a localStorage-backed setting; comfortable is the default.
-		<html lang="en" data-density="comfortable">
+		<html lang="en" data-density="comfortable" className="h-full">
 			<head>
 				<HeadContent />
 			</head>
-			<body className="min-h-screen bg-background text-foreground antialiased">
+			{/* The app shell owns the viewport: body is locked to one screen and each
+			    route owns its own internal scroll, so there is never a body scrollbar
+			    fighting the rail. */}
+			<body className="h-screen overflow-hidden bg-background text-foreground antialiased">
 				{children}
 				<Scripts />
 			</body>
@@ -126,7 +129,7 @@ const RootComponent: FC = () => {
 				<CommandPaletteProvider placeholder="Try Cmd+K — search, browse, reconnect…">
 					<GlobalNavBindings />
 					<KeyboardCheatsheet />
-					<Outlet />
+					<AppFrame />
 					<Toaster position="bottom-right" />
 				</CommandPaletteProvider>
 			</KeybindRegistryProvider>

@@ -82,7 +82,7 @@ const GraphView: FC = () => {
 
 	if (nodesQuery.isLoading) {
 		return (
-			<div className="flex h-screen w-screen items-center justify-center">
+			<div className="flex h-full w-full items-center justify-center">
 				<LoadingState label="Loading palace graph…" />
 			</div>
 		);
@@ -90,7 +90,7 @@ const GraphView: FC = () => {
 
 	if (nodesQuery.isError || !nodesQuery.data) {
 		return (
-			<div className="flex h-screen w-screen items-center justify-center p-8">
+			<div className="flex h-full w-full items-center justify-center p-8">
 				<ErrorState
 					title="Could not load the palace graph"
 					description={
@@ -113,7 +113,7 @@ const GraphView: FC = () => {
 			: null;
 
 	return (
-		<div className="h-screen w-screen">
+		<div className="h-full w-full">
 			<GraphKeybindings
 				isolated={isolated}
 				onIsolate={handleIsolate}
@@ -162,6 +162,30 @@ const GraphView: FC = () => {
 	);
 };
 
+// Route-level pending skeleton, centered in the shell `main`. The loader below
+// primes the (heavy) node dataset so this actually fires on a cold navigation.
+const GraphPending: FC = () => {
+	return (
+		<div className="flex h-full w-full items-center justify-center">
+			<LoadingState label="Loading palace graph…" />
+		</div>
+	);
+};
+
 export const Route = createFileRoute("/graph/")({
 	component: GraphView,
+	pendingComponent: GraphPending,
+	// Prime the load-bearing node dataset at the route level so the pending UI
+	// fires on a cold navigation; the in-component `useQuery` then reads it from
+	// cache. Errors are swallowed — the component surfaces them via `isError`.
+	loader: async ({ context }) => {
+		try {
+			await context.queryClient.ensureQueryData({
+				queryKey: ["palace", "graph", "nodes"],
+				queryFn: () => listGraphNodes({ data: {} }),
+			});
+		} catch {
+			// Component renders the ErrorState from its own query.
+		}
+	},
 });

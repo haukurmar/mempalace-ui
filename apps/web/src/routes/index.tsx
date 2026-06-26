@@ -91,7 +91,11 @@ const Observatory: FC = () => {
 	const live = changeStampQuery.isSuccess && nodesQuery.isSuccess;
 
 	return (
-		<main className="relative h-screen w-screen overflow-hidden bg-primary-1000 text-secondary-50">
+		// Fills the shell `main` (no longer the full viewport). The Observatory
+		// canvas + label overlay are `absolute inset-0` against this relative box,
+		// so the cosmos.gl projection — which is canvas/container-local — stays
+		// aligned once the rail insets the area.
+		<div className="relative h-full w-full overflow-hidden bg-primary-1000 text-secondary-50">
 			{/* Atmospheric nebula behind the (transparent-cleared) star canvas. */}
 			<Nebula />
 
@@ -137,7 +141,7 @@ const Observatory: FC = () => {
 					the constellation is offline — the local palace could not be read
 				</p>
 			) : null}
-		</main>
+		</div>
 	);
 };
 

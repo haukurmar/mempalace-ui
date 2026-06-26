@@ -146,7 +146,7 @@ const SearchPage: FC = () => {
 	};
 
 	return (
-		<div className="flex h-screen w-screen flex-col">
+		<div className="flex h-full w-full flex-col">
 			<header className="flex shrink-0 flex-col gap-3 border-b border-secondary-200 bg-background px-6 py-4">
 				<SearchInput
 					value={draftQuery}

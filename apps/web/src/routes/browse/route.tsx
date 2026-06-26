@@ -101,7 +101,7 @@ const BrowseLayout: FC = () => {
 	);
 
 	return (
-		<div className="h-screen w-screen">
+		<div className="h-full w-full">
 			<ListDetailLayout
 				sidebar={sidebar}
 				main={<Outlet />}
@@ -113,8 +113,32 @@ const BrowseLayout: FC = () => {
 	);
 };
 
+// Route-level pending skeleton: keep the ListDetailLayout frame so the rail and
+// the two-column shape never collapse during navigation; only the sidebar shows
+// a LoadingState while the room tree loads.
+const BrowsePending: FC = () => {
+	return (
+		<div className="h-full w-full">
+			<ListDetailLayout
+				sidebar={
+					<div className="flex h-full flex-col gap-3 p-3">
+						<h2 className="px-2 text-xs font-medium uppercase tracking-wide text-secondary-700">
+							Palace
+						</h2>
+						<LoadingState label="Loading palace…" />
+					</div>
+				}
+				main={null}
+				detail={null}
+				detailOpen={false}
+			/>
+		</div>
+	);
+};
+
 export const Route = createFileRoute("/browse")({
 	component: BrowseLayout,
+	pendingComponent: BrowsePending,
 	validateSearch: validateBrowseSearch,
 	loader: async ({ context }) => {
 		try {

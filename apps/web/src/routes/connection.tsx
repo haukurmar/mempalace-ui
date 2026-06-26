@@ -94,38 +94,42 @@ const ConnectionPage: FC = () => {
 	}, [stampQuery.data, queryClient]);
 
 	return (
-		<main className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
-			<header className="flex flex-col gap-1">
-				<h1 className="text-xl font-semibold text-primary-900">Palace connection</h1>
-				<p className="text-sm text-secondary-700">
-					Live SQLite + MCP status. The page polls a change stamp every {POLL_INTERVAL_MS / 1000}s
-					so external writes invalidate cached queries.
-				</p>
-			</header>
+		// Owns its own vertical scroll inside the shell `main` (body scroll is
+		// locked), and is no longer a `<main>` landmark — the shell provides that.
+		<div className="h-full w-full overflow-y-auto">
+			<div className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
+				<header className="flex flex-col gap-1">
+					<h1 className="text-xl font-semibold text-primary-900">Palace connection</h1>
+					<p className="text-sm text-secondary-700">
+						Live SQLite + MCP status. The page polls a change stamp every {POLL_INTERVAL_MS / 1000}s
+						so external writes invalidate cached queries.
+					</p>
+				</header>
 
-			{statusQuery.isLoading ? (
-				<EmptyState
-					title="Probing palace…"
-					description="Opening SQLite and pinging mempalace-mcp."
-				/>
-			) : statusQuery.isError ? (
-				<ErrorState
-					title="Could not load palace status"
-					description={errorMessageOf(statusQuery.error)}
-				/>
-			) : statusQuery.data ? (
-				<>
-					<section className="flex flex-col gap-2">
-						<h2 className="text-sm font-medium text-primary-900">SQLite</h2>
-						<SqliteSummary status={statusQuery.data} />
-					</section>
-					<section className="flex flex-col gap-2">
-						<h2 className="text-sm font-medium text-primary-900">MCP</h2>
-						<McpBanner status={statusQuery.data} />
-					</section>
-				</>
-			) : null}
-		</main>
+				{statusQuery.isLoading ? (
+					<EmptyState
+						title="Probing palace…"
+						description="Opening SQLite and pinging mempalace-mcp."
+					/>
+				) : statusQuery.isError ? (
+					<ErrorState
+						title="Could not load palace status"
+						description={errorMessageOf(statusQuery.error)}
+					/>
+				) : statusQuery.data ? (
+					<>
+						<section className="flex flex-col gap-2">
+							<h2 className="text-sm font-medium text-primary-900">SQLite</h2>
+							<SqliteSummary status={statusQuery.data} />
+						</section>
+						<section className="flex flex-col gap-2">
+							<h2 className="text-sm font-medium text-primary-900">MCP</h2>
+							<McpBanner status={statusQuery.data} />
+						</section>
+					</>
+				) : null}
+			</div>
+		</div>
 	);
 };
 

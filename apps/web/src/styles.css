@@ -66,6 +66,23 @@
 }
 
 /*
+ * Honor `prefers-reduced-motion: reduce` globally by collapsing every motion
+ * duration token to 0ms. The design-tokens preset emits the semantic
+ * `--motion-*-duration` vars as references to these `--duration-*` primitives,
+ * so anything timed off either var becomes instant here with no per-component
+ * opt-in — reduced motion is automatic for any consumer of the duration tokens.
+ */
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--duration-instant: 0ms;
+		--duration-fast: 0ms;
+		--duration-base: 0ms;
+		--duration-slow: 0ms;
+		--duration-slower: 0ms;
+	}
+}
+
+/*
  * Observatory atmosphere — a fine film grain and a soft vignette layered over the
  * full-bleed constellation for depth. Both are pure CSS (no image assets) and sit
  * in overlay elements with pointer-events disabled, so the graph stays alive

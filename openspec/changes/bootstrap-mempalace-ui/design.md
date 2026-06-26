@@ -61,9 +61,15 @@ All server-side work (SQLite reads, MCP RPC calls, filesystem watching, version 
 - **TanStack Start API routes only (no server functions)** — works, but server functions are the more direct ergonomics for this RPC-style use case.
 - **Direct browser-to-MCP** — would still need a separate path for SQLite, defeating the unification goal.
 
-### D3. Graph engine: **`cosmograph`** for v1
+### D3. Graph engine: **`cosmos.gl`** for v1 — VERIFIED by 12.1 benchmark
 
-`@cosmograph/cosmograph` is a WebGL force-directed graph that demonstrably handles 1M+ nodes. Our 87K is comfortably inside its sweet spot. SVG-based force-graph approaches explicitly top out around 10K — known dead end at our scale.
+`cosmos.gl` (the renamed/current `@cosmos.gl/graph`, successor to `@cosmograph/cosmograph`) is a WebGL force-directed graph that demonstrably handles 1M+ nodes. SVG-based force-graph approaches explicitly top out around 10K — known dead end at our scale.
+
+**12.1 benchmark result (verified 2026-06-26, real palace, Apple M5 Pro / ANGLE Metal — hardware GPU, representative):**
+- **164,062 real nodes** (the palace has grown past the spec's 87K), full zoom-to-fit, scripted pan/zoom, 1,191 frames sampled.
+- **median 120.5 fps** (criterion ≥30) · mean 120 fps · **0% of frames >33ms** (criterion <10%) · p95 frame 9.4ms · max 10.4ms.
+- SQL query 325ms · data load (rpc) 712ms · layout build 26ms.
+- **Verdict: PASS, decisively. cosmos.gl is locked for v1; the PixiJS fallback is not needed.** Sandbox: throwaway `/graph-bench` route (deleted after this phase); rerun on other hardware via the scratch `run-bench.mjs` Playwright driver (system Chrome, real GPU).
 
 **Alternatives considered:**
 - **PixiJS + custom force layout** — more flexible, but a lot of engineering to reinvent what cosmograph gives us out of the box.

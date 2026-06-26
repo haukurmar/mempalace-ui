@@ -105,13 +105,13 @@
 
 ## 12. Feature: palace graph view
 
-- [ ] 12.1 Build a benchmarking sandbox that loads the real palace into cosmograph and measures FPS at full size; document results
-- [ ] 12.2 If cosmograph holds the budget, implement `/graph` route with cosmograph; otherwise switch fallback to PixiJS and update design.md
-- [ ] 12.3 Implement multi-wing rendering with hue-family-per-wing visual distinction
-- [ ] 12.4 Implement layout-as-force-tuning across Explode / Orbit / Cluster modes (keys 1/2/3) with smooth transitions
-- [ ] 12.5 Implement the 5 color modes via `C` keybind cycle; cluster mode reads precomputed `clusterId` metadata
-- [ ] 12.6 Implement click-to-isolate 2-hop neighborhood mode entered via `L`; exit via `Esc`
-- [ ] 12.7 Implement cross-wing tunnel highlighting toggle
+- [x] 12.1 Build a benchmarking sandbox that loads the real palace into cosmograph and measures FPS at full size; document results
+- [x] 12.2 If cosmograph holds the budget, implement `/graph` route with cosmograph; otherwise switch fallback to PixiJS and update design.md
+- [x] 12.3 Implement multi-wing rendering with hue-family-per-wing visual distinction
+- [x] 12.4 Implement layout-as-force-tuning across Explode / Orbit / Cluster modes (keys 1/2/3) with smooth transitions
+- [x] 12.5 Implement the 5 color modes via `C` keybind cycle; cluster mode reads precomputed `clusterId` metadata
+- [x] 12.6 Implement click-to-isolate 2-hop neighborhood mode entered via `L`; exit via `Esc`
+- [x] 12.7 Implement cross-wing tunnel highlighting toggle
 - [ ] 12.8 Add a one-shot worker (`packages/palace-clients` script) that precomputes cluster IDs and persists them to drawer metadata via MCP
 
 ## 13. Feature: drawer curation

@@ -23,7 +23,7 @@ export const SettingsLayout: FC<SettingsLayoutProps> = (props) => {
 				<aside className={cn("shrink-0 overflow-y-auto border-r border-secondary-200", navWidth)}>
 					{nav}
 				</aside>
-				<main className="min-w-0 flex-1 overflow-y-auto">{pane}</main>
+				<div className="min-w-0 flex-1 overflow-y-auto">{pane}</div>
 			</div>
 		</div>
 	);

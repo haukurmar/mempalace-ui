@@ -104,7 +104,6 @@ export const AppRail: FC<AppRailProps> = (props) => {
 			<aside
 				data-density={density}
 				data-expanded={expanded}
-				aria-label={ariaLabel}
 				style={reduced ? undefined : widthTransitionStyle}
 				className={cn(
 					"relative flex h-full shrink-0 flex-col overflow-hidden border-r border-primary-900/70 bg-primary-1000 text-secondary-100",

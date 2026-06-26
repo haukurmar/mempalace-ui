@@ -32,10 +32,15 @@ export const RAIL_ITEMS: RailItemData[] = [
  * `Link` so the rail's active/hover treatment is preserved.
  */
 export const renderRailItem: RailItemRenderer = (args) => {
-	const { item, isActive, className, children } = args;
+	const { item, isActive, expanded, className, children } = args;
 	const to = RAIL_ROUTE_BY_ID[item.id as RailId];
 	return (
-		<Link to={to} className={className} aria-current={isActive ? "page" : undefined}>
+		<Link
+			to={to}
+			className={className}
+			aria-current={isActive ? "page" : undefined}
+			aria-label={!expanded ? item.label : undefined}
+		>
 			{children}
 		</Link>
 	);

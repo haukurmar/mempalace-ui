@@ -103,6 +103,7 @@ export const RailItem: FC<RailItemProps> = (props) => {
 			type="button"
 			onClick={handleSelect}
 			aria-current={isActive ? "page" : undefined}
+			aria-label={!expanded ? item.label : undefined}
 			className={rowClassName}
 		>
 			{children}

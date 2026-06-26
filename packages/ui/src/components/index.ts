@@ -1,5 +1,5 @@
 export type { AppRailProps, RailItemData, RailItemRenderArgs, RailItemRenderer } from "./app-rail";
-export { AppRail, RailItem } from "./app-rail";
+export { AppRail } from "./app-rail";
 export type { CommandAction, CommandBarProps } from "./command-bar";
 export { CommandBar } from "./command-bar";
 export type { DrawerCardProps, DrawerSummary } from "./drawer-card";

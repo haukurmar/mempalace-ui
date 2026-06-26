@@ -84,6 +84,8 @@ const motionLines = () => {
 
 	// Semantic transitions reference the primitive vars (not literals) so a
 	// `prefers-reduced-motion` override of `--duration-*` cascades through them.
+	// Assumes duration/easing values are distinct — two tokens sharing a value
+	// would collapse to one key here and the reverse-map would pick a single winner.
 	const durationKeyByValue = new Map(Object.entries(duration).map(([k, v]) => [v, k]));
 	const easingKeyByValue = new Map(Object.entries(easing).map(([k, v]) => [v, k]));
 	for (const [name, def] of Object.entries(motion)) {

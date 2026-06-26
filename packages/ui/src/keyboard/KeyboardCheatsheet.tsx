@@ -19,6 +19,7 @@ const SCOPE_LABELS: Record<ScopeName, string> = {
 	"search-results": "Search results",
 	"drawer-panel": "Drawer panel",
 	editor: "Editor",
+	graph: "Graph view",
 	cheatsheet: "Shortcuts",
 	palette: "Command palette",
 };

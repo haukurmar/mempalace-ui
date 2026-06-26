@@ -10,6 +10,7 @@ export type ScopeName =
 	| "search-results"
 	| "drawer-panel"
 	| "editor"
+	| "graph"
 	| "cheatsheet"
 	| "palette";
 

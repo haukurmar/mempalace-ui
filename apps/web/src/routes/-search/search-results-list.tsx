@@ -121,7 +121,10 @@ export const SearchResultsList: FC<SearchResultsListProps> = (props) => {
 		>
 			{results.map((result, index) => (
 				<SearchResultsListItem
-					key={result.drawerId ?? `${result.wing.id}/${result.room.id}/${index}`}
+					// Index-suffixed so the key stays unique even when several
+					// rows resolve to the same drawer (multiple chunks of one
+					// source file all recover the same first-chunk drawer id).
+					key={`${result.drawerId ?? `${result.wing.id}/${result.room.id}`}:${index}`}
 					ref={(node) => {
 						rowRefs.current[index] = node;
 					}}
